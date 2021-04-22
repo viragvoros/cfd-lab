@@ -2,7 +2,8 @@
 
 Fluidchen is a CFD Solver developed for the CFD Lab taught at TUM Informatics, Chair of Scientific Computing in Computer Science.
 
-Solutions for CFD Lab summer term 2021 of Group A
+Solutions of Group A for the CFD Lab
+Summer term 2021
 Theresa Hefele, Virag Vörös, Elia Zonta
 
 ## Working with fluidchen
