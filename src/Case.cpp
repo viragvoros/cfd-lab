@@ -178,6 +178,10 @@ void Case::simulate() {
     double dt = _field.dt();
     int timestep = 0;
     double output_counter = 0.0;
+
+    for (std::unique_ptr<Boundary> elem : _boundaries) {
+        elem->apply(_field);
+    }
 }
 
 void Case::output_vtk(int timestep, int my_rank) {
