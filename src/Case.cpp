@@ -179,8 +179,8 @@ void Case::simulate() {
     int timestep = 0;
     double output_counter = 0.0;
 
-    for (std::unique_ptr<Boundary> elem : _boundaries) {
-        elem->apply(_field);
+    for (auto boundary : _boundaries) {
+        boundary->apply();
     }
 }
 
