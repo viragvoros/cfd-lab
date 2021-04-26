@@ -15,22 +15,34 @@ void FixedWallBoundary::apply(Fields &field) {
 
         if (not cell_borders.empty()) {
 
-            for (auto & elem : cell_borders) {
+            for (const auto & elem : cell_borders) {
                 if (static_cast<int>(elem) == 0) {      // border is in TOP position
                     field.u(i,j) = -field.u(i,j+1);     
                     field.v(i,j) = 0;
+                    field.p(i,j) = field.p(i,j+1);
+                    field.f(i,j) = field.u(i,j);
+                    field.g(i,j) = field.g(i,j);
                 }
                 else if (static_cast<int>(elem) == 1) { // border is in BOTTOM position
-                    field.u(i,j) = -field.u(i,j-1);
+                    field.u(i,j)   = - field.u(i,j-1);
                     field.v(i,j-1) = 0;
+                    field.p(i,j)   = field.p(i,j-1);
+                    field.f(i,j)   = field.u(i,j);
+                    field.g(i,j)   = field.g(i,j);
                 }
                 else if (static_cast<int>(elem) == 2) { // border is in LEFT position
                     field.u(i-1,j) = 0;
-                    field.v(i,j) = -field.v(i-1,j);
+                    field.v(i,j)   = - field.v(i-1,j);
+                    field.p(i,j)   = field.p(i-1,j);
+                    field.f(i,j)   = field.u(i,j);
+                    field.g(i,j)   = field.g(i,j);
                 }
                 else if (static_cast<int>(elem) == 3) { // border is in RIGHT position
                     field.u(i,j) = 0;
-                    field.v(i,j) = -field.v(i+1,j);
+                    field.v(i,j) = - field.v(i+1,j);
+                    field.p(i,j) = field.p(i+1,j);
+                    field.f(i,j) = field.u(i,j);
+                    field.g(i,j) = field.g(i,j);
                 }
             }
         }
@@ -58,18 +70,30 @@ void MovingWallBoundary::apply(Fields &field) {
                 if (static_cast<int>(elem) == 0) {      // border is in TOP position
                     field.u(i,j) = 2 * _wall_velocity[0] - field.u(i,j+1);     
                     field.v(i,j) = 0;
+                    field.p(i,j) = field.p(i,j+1);
+                    field.f(i,j) = field.u(i,j);
+                    field.g(i,j) = field.g(i,j);
                 }
                 else if (static_cast<int>(elem) == 1) { // border is in BOTTOM position
                     field.u(i,j) = 2 * _wall_velocity[0] - field.u(i,j-1);
-                    field.v(i,j) = 0;
+                    field.v(i,j-1) = 0;
+                    field.p(i,j) = field.p(i,j-1);
+                    field.f(i,j) = field.u(i,j);
+                    field.g(i,j) = field.g(i,j);
                 }
                 else if (static_cast<int>(elem) == 2) { // border is in LEFT position
-                    field.u(i,j) = 0;
+                    field.u(i-1,j) = 0;
                     field.v(i,j) = 2 * _wall_velocity[1] - field.v(i-1,j);
+                    field.p(i,j) = field.p(i-1,j);
+                    field.f(i,j) = field.u(i,j);
+                    field.g(i,j) = field.g(i,j);
                 }
                 else if (static_cast<int>(elem) == 3) { // border is in RIGHT position
                     field.u(i,j) = 0;
                     field.v(i,j) = 2 * _wall_velocity[1] - field.v(i+1,j);
+                    field.p(i,j) = field.p(i+1,j);
+                    field.f(i,j) = field.u(i,j);
+                    field.g(i,j) = field.g(i,j);
                 }
             }
         }
