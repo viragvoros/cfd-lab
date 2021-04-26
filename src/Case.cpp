@@ -189,7 +189,7 @@ void Case::simulate() {
     double res = _pressure_solver.solve(_field, _grid, _boundaries);
     int nb_iter = 0;
     while (res >= _tolerance && nb_iter <= _max_iter){
-        res = _pressure_solver.solve(_field, _grid, _boundaries);
+        res = _pressure_solver->solve(_field, _grid, _boundaries);
         nb_iter++;
     }
 
