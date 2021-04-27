@@ -61,6 +61,7 @@ class Fields {
      *
      */
     double calculate_dt(Grid &grid);
+    double find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb);
 
     /// x-velocity index based access and modify
     double &u(int i, int j);

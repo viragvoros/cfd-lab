@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 Fields::Fields(double nu, double dt, double tau, int imax, int jmax, double UI, double VI, double PI)
     : _nu(nu), _dt(dt), _tau(tau) {
@@ -40,11 +41,21 @@ void Fields::calculate_velocities(Grid &grid) {
     } 
 }
 
+double Fields::find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb) {
+    double maximum = 0;
+    for(int j = 0; j < jmaxb; ++j){
+        for(int i = 0; i < imaxb; ++i){
+            maximum = std::max(M(i, j), maximum);
+        }
+    }
+    return maximum;
+}
+
 double Fields::calculate_dt(Grid &grid) {
     double val_1 = 1 / (2 * _nu) * 1 / (1 / (grid.dx()* grid.dx()) + 1 / (grid.dy()* grid.dy()));
-    double val_2 = grid.dx() / std::max(_U);
-    double val_3 = grid.dy() / std::max(_V);
-    double max_dt = _tau * std::min(val_1, val_2, val_3);
+    double val_2 = grid.dx() / std::abs(find_max(_U, grid.imaxb(), grid.jmaxb()));
+    double val_3 = grid.dy() / std::abs(find_max(_V, grid.imaxb(), grid.jmaxb()));
+    double max_dt = _tau * std::min(std::min(val_1, val_2), val_3);
     return max_dt;
 }
 

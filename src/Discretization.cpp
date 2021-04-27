@@ -14,13 +14,13 @@ Discretization::Discretization(double dx, double dy, double gamma) {
 
 double Discretization::convection_u(const Matrix<double> &U, const Matrix<double> &V, int i, int j) {
     double dUU = 1 / _dx * (pow((((U(i, j) + U(i + 1, j)) * 0.5)), 2.0) - pow((((U(i - 1, j) + U(i, j)) * 0.5)), 2.0)) +
-                    _gamma / _dx * (abs((U(i, j) + U(i + 1, j)) * 0.5) * ((U(i, j) - U(i + 1, j)) * 0.5) - 
-                    abs((U(i - 1, j) + U(i, j)) * 0.5) * ((U(i - 1, j) - U(i, j)) * 0.5));
+                    _gamma / _dx * (std::abs((U(i, j) + U(i + 1, j)) * 0.5) * ((U(i, j) - U(i + 1, j)) * 0.5) - 
+                    std::abs((U(i - 1, j) + U(i, j)) * 0.5) * ((U(i - 1, j) - U(i, j)) * 0.5));
 
     double dUV = 1 / _dy * ((V(i, j) + V(i + 1, j) * 0.5) * ((U(i, j) + U(i, j + 1)) * 0.5) - 
                     (V(i, j - 1) + V(i + 1, j - 1) * 0.5) * ((U(i, j - 1) + U(i, j)) * 0.5)) + 
-                    _gamma / _dy * (abs(V(i, j) + V(i + 1, j) * 0.5) * ((U(i, j) - U(i, j + 1)) * 0.5) - 
-                    abs(V(i, j - 1) + V(i + 1, j - 1) * 0.5) * ((U(i, j - 1) - U(i, j)) * 0.5));
+                    _gamma / _dy * (std::abs(V(i, j) + V(i + 1, j) * 0.5) * ((U(i, j) - U(i, j + 1)) * 0.5) - 
+                    std::abs(V(i, j - 1) + V(i + 1, j - 1) * 0.5) * ((U(i, j - 1) - U(i, j)) * 0.5));
     
     double result = dUU + dUV;
     return result;
@@ -28,13 +28,13 @@ double Discretization::convection_u(const Matrix<double> &U, const Matrix<double
 
 double Discretization::convection_v(const Matrix<double> &U, const Matrix<double> &V, int i, int j) {
     double dVV = 1 / _dy * (pow((((V(i, j) + V(i, j + 1)) * 0.5)), 2.0) - pow((((V(i, j - 1) + V(i, j)) * 0.5)), 2.0)) +
-                    _gamma / _dy * (abs((V(i, j) + V(i, j + 1)) * 0.5) * ((V(i, j) - V(i, j + 1)) * 0.5) - 
-                    abs((V(i, j - 1) + V(i, j)) * 0.5) * ((V(i, j - 1) - V(i, j)) * 0.5));
+                    _gamma / _dy * (std::abs((V(i, j) + V(i, j + 1)) * 0.5) * ((V(i, j) - V(i, j + 1)) * 0.5) - 
+                    std::abs((V(i, j - 1) + V(i, j)) * 0.5) * ((V(i, j - 1) - V(i, j)) * 0.5));
 
     double dUV = 1 / _dx * ((U(i, j) + U(i, j + 1) * 0.5) * ((V(i, j) + V(i + 1, j)) * 0.5) - 
                     (U(i - 1, j) + U(i - 1, j + 1) * 0.5) * ((V(i - 1, j) + V(i, j)) * 0.5)) + 
-                    _gamma / _dx * (abs(U(i, j) + U(i, j + 1) * 0.5) * ((V(i, j) - V(i + 1, j)) * 0.5) - 
-                    abs(U(i - 1, j) + U(i - 1, j + 1) * 0.5) * ((V(i - 1, j) - V(i, j)) * 0.5));
+                    _gamma / _dx * (std::abs(U(i, j) + U(i, j + 1) * 0.5) * ((V(i, j) - V(i + 1, j)) * 0.5) - 
+                    std::abs(U(i - 1, j) + U(i - 1, j + 1) * 0.5) * ((V(i - 1, j) - V(i, j)) * 0.5));
     
     double result = dVV + dUV;
     return result;

@@ -186,7 +186,7 @@ void Case::simulate() {
     _field.calculate_fluxes(_grid);
     _field.calculate_rs(_grid);
 
-    double res = _pressure_solver.solve(_field, _grid, _boundaries);
+    double res = _pressure_solver->solve(_field, _grid, _boundaries);
     int nb_iter = 0;
     while (res >= _tolerance && nb_iter <= _max_iter){
         res = _pressure_solver->solve(_field, _grid, _boundaries);
