@@ -194,8 +194,9 @@ void Case::simulate() {
     }
 
     _field.calculate_velocities(_grid);
-    double max_timestep = _field.calculate_dt(_grid);
+    timestep = int(_field.calculate_dt(_grid));
     
+    output_vtk(timestep, 0);
 }
 
 void Case::output_vtk(int timestep, int my_rank) {
