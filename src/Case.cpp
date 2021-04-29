@@ -96,6 +96,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     _max_iter = itermax;
     _tolerance = eps;
 
+
     // Construct boundaries
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
@@ -180,21 +181,23 @@ void Case::simulate() {
     double output_counter = 0.0;
 
     while (t <= _t_end){
-        //timestep = int(_field.calculate_dt(_grid));
 
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
         }
 
-        _field.calculate_fluxes(_grid);
+        _field.calculate_fluxes(_grid, _discretization);
         _field.calculate_rs(_grid);
 
-        double res = _pressure_solver->solve(_field, _grid, _boundaries);
-        int nb_iter = 0;
-        while (res >= _tolerance && nb_iter <= _max_iter){
-            res = _pressure_solver->solve(_field, _grid, _boundaries);
+        int nb_iter = 1;
+        while (nb_iter <= _max_iter){
+            double res = _pressure_solver->solve(_field, _grid, _boundaries);
+            if (res <= _tolerance){
+                break;
+            }
             nb_iter++;
         }
+        std::cout << nb_iter << std::endl;
 
         _field.calculate_velocities(_grid);
         //output_vtk(t, output_counter);

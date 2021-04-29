@@ -15,15 +15,15 @@ Fields::Fields(double nu, double dt, double tau, int imax, int jmax, double UI, 
     _RS = Matrix<double>(imax + 2, jmax + 2, 0.0);
 }
 
-void Fields::calculate_fluxes(Grid &grid) {
+void Fields::calculate_fluxes(Grid &grid, Discretization &discretization) {
     for(int j = 1; j <= grid.jmax(); j++){
         for(int i = 1; i <= (grid.imax()- 1); i++){
-            f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) - Discretization::convection_u(_U, _V, i, j) + _gx);
+            f(i, j) = u(i, j) + _dt * (_nu * discretization.diffusion(_U, i, j) - discretization.convection_u(_U, _V, i, j) + _gx);
         }
     }
     for(int j = 1; j <= (grid.jmax() - 1); j++){
         for(int i = 1; i <= grid.imax(); i++){
-            g(i, j) = v(i, j) + _dt * (_nu * Discretization::diffusion(_V, i, j) - Discretization::convection_v(_U, _V, i, j) + _gy);
+            g(i, j) = v(i, j) + _dt * (_nu * discretization.diffusion(_V, i, j) - discretization.convection_v(_U, _V, i, j) + _gy);
         }
     }
 }
