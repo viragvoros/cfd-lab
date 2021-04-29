@@ -179,7 +179,7 @@ void Case::simulate() {
     int timestep = 0;
     double output_counter = 0.0;
 
-    while (t < _t_end){
+    while (t <= _t_end){
         //timestep = int(_field.calculate_dt(_grid));
 
         for (auto &boundary : _boundaries) {
@@ -197,6 +197,7 @@ void Case::simulate() {
         }
 
         _field.calculate_velocities(_grid);
+        //output_vtk(t, output_counter);
         t = t + dt;
         output_counter++;
     }

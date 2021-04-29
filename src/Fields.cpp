@@ -39,12 +39,12 @@ void Fields::calculate_rs(Grid &grid) {
 void Fields::calculate_velocities(Grid &grid) {
     for(int j = 1; j <= (grid.jmax()); j++){
         for(int i = 1; i <= (grid.imax()-1); i++){
-            u(i, j) = f(i, j) + _dt / grid.dx() * (p(i + 1, j) - p(i, j));
+            u(i, j) = f(i, j) - _dt / grid.dx() * (p(i + 1, j) - p(i, j));
         }
     } 
     for(int j = 1; j <= (grid.jmax()-1); j++){
         for(int i = 1; i <= (grid.imax()); i++){
-            v(i, j) = g(i, j) + _dt / grid.dy() * (p(i, j + 1) - p(i, j));
+            v(i, j) = g(i, j) - _dt / grid.dy() * (p(i, j + 1) - p(i, j));
         }
     } 
 }
