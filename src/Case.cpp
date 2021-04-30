@@ -181,8 +181,8 @@ void Case::simulate() {
     double output_counter = 0.0;
 
     while (t <= _t_end){
-        //dt = _field.calculate_dt(_grid);
-        //std::cout << dt << std::endl;
+        dt = _field.calculate_dt(_grid);
+        std::cout << dt << std::endl;
 
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
@@ -192,7 +192,7 @@ void Case::simulate() {
         _field.calculate_rs(_grid);
 
         int nb_iter = 0;
-        while (nb_iter <= _max_iter){
+        while (nb_iter <= 1000){
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance){
                 break;

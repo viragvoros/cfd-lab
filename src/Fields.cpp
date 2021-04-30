@@ -64,6 +64,8 @@ double Fields::calculate_dt(Grid &grid) {
     double val_2 = grid.dx() / std::abs(find_max(_U, grid.imax(), grid.jmax()));
     double val_3 = grid.dy() / std::abs(find_max(_V, grid.imax(), grid.jmax()));
     double max_dt = _tau * std::min(std::min(val_1, val_2), val_3);
+
+    _dt = max_dt;
     return max_dt;
 }
 
