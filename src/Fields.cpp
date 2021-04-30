@@ -59,11 +59,11 @@ double Fields::find_max(const Matrix<double> &M, const int &imaxb, const int &jm
     return maximum;
 }
 
-double Fields::calculate_dt(Grid &grid) {
-    double val_1 = 1 / (2 * _nu) * 1 / (1 / (grid.dx()* grid.dx()) + 1 / (grid.dy()* grid.dy()));
+double Fields::calculate_dt(Grid &grid) { // Three criterions accodring to (13) from WS1 must be fulfilled
+    double val_1 = ( 1 / (2 * _nu) ) * 1 / ( 1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()) );
     double val_2 = grid.dx() / std::abs(find_max(_U, grid.imax(), grid.jmax()));
     double val_3 = grid.dy() / std::abs(find_max(_V, grid.imax(), grid.jmax()));
-    double max_dt = _tau * std::min(std::min(val_1, val_2), val_3);
+    double max_dt = _tau * std::min({val_1, val_2, val_3});
 
     _dt = max_dt;
     return max_dt;
