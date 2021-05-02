@@ -6,10 +6,6 @@ Solutions of Group A for the CFD Lab
 Summer term 2021
 Theresa Hefele, Virag Vörös, Elia Zonta
 
-## Working with fluidchen
-
-You will extend this code step-by-step starting from a pure framework to a parallel CFD solver. Please follow these [instructions for work with git and submitting the assignments](docs/first-steps.md).
-
 ## Software Requirements
 
 * VTK 7 or higher
@@ -47,9 +43,6 @@ or
 ```shell
 cmake -DCMAKE_CXX_FLAGS="-O3" ..
 ```
-
-A good idea would be that you setup your computers as runners for [GitLab CI](https://docs.gitlab.com/ee/ci/)
-(see the file `.gitlab-ci.yml` here) to check the code building automatically every time you push.
 
 ## Running
 
