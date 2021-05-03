@@ -62,6 +62,7 @@ double Discretization::sor_helper(const Matrix<double> &P, int i, int j) {
     return result;
 }
 
+// Take the "average" of two values
 double Discretization::interpolate(const Matrix<double> &A, int i, int j, int i_offset, int j_offset) {
     double interpolated = (A(i, j) + A(i + i_offset, j + j_offset)) / 2;
     return interpolated;

@@ -10,8 +10,9 @@ double SOR::solve(Fields &field, Grid &grid, const std::vector<std::unique_ptr<B
     double dx = grid.dx();
     double dy = grid.dy();
 
+    // Additional application of boundary conditions as mentioned in tutorial.
     for (auto &boundary : boundaries) {
-            boundary->apply(field);
+            boundary->apply(field, grid.imax(), grid.jmax());
     }
 
     double coeff = _omega / (2.0 * (1.0 / (dx * dx) + 1.0 / (dy * dy))); // = _omega * h^2 / 4.0, if dx == dy == h

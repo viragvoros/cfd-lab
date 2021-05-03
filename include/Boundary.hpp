@@ -18,7 +18,9 @@ class Boundary {
      *
      * @param[in] Field to be applied
      */
-    virtual void apply(Fields &field) = 0;
+
+    // We changed signature to implement assert, see implementation in Boundary.cpp
+    virtual void apply(Fields &field, int imax, int jmax) = 0;
     virtual ~Boundary() = default;
 };
 
@@ -31,7 +33,7 @@ class FixedWallBoundary : public Boundary {
     FixedWallBoundary(std::vector<Cell *> cells);
     FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature);
     virtual ~FixedWallBoundary() = default;
-    virtual void apply(Fields &field);
+    virtual void apply(Fields &field, int imax, int jmax);
 
   private:
     std::vector<Cell *> _cells;
@@ -49,7 +51,7 @@ class MovingWallBoundary : public Boundary {
     MovingWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_velocity,
                        std::map<int, double> wall_temperature);
     virtual ~MovingWallBoundary() = default;
-    virtual void apply(Fields &field);
+    virtual void apply(Fields &field, int imax, int jmax);
 
   private:
     std::vector<Cell *> _cells;

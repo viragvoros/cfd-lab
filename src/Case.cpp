@@ -178,13 +178,16 @@ void Case::simulate() {
     double t = 0.0;
     double dt = _field.dt();
     int timestep = 0;
-    double output_counter = 0.0;
+    // Changed to integer to use as input parameter for vtk file generation
+    int output_counter = 0;
 
     while (t <= _t_end){
+        // Calculate optimum timestep
         dt = _field.calculate_dt(_grid);
 
+        // Application of boundary conditions
         for (auto &boundary : _boundaries) {
-            boundary->apply(_field);
+            boundary->apply(_field, _grid.imax(), _grid.jmax());
         }
 
         _field.calculate_fluxes(_grid);
@@ -204,7 +207,9 @@ void Case::simulate() {
         t = t + dt;
         output_counter++;
     }
-    output_vtk(0, 0);
+
+    // We only plot the last timestep, otherwise our program would generate 10000 files (dt = 0.005).
+    output_vtk(timestep, output_counter);
 }
 
 void Case::output_vtk(int timestep, int my_rank) {

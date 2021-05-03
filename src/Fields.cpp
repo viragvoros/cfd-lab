@@ -28,6 +28,7 @@ void Fields::calculate_fluxes(Grid &grid) {
     }
 }
 
+// Calculate righ-hand-side of PPE
 void Fields::calculate_rs(Grid &grid) {
     for(int j = 1; j <= grid.jmax(); j++){
         for(int i = 1; i <= grid.imax(); i++){
@@ -49,6 +50,7 @@ void Fields::calculate_velocities(Grid &grid) {
     } 
 }
 
+// Function was implemented to get maximum value of matrix
 double Fields::find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb) {
     double maximum = 0;
     for(int j = 0; j <= jmaxb; ++j){
@@ -59,7 +61,8 @@ double Fields::find_max(const Matrix<double> &M, const int &imaxb, const int &jm
     return maximum;
 }
 
-double Fields::calculate_dt(Grid &grid) { // Three criterions accodring to (13) from WS1 must be fulfilled
+// Getting optimum dt based on CFL condition
+double Fields::calculate_dt(Grid &grid) {
     double val_1 = ( 1 / (2 * _nu) ) * 1 / ( 1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()) );
     double val_2 = grid.dx() / std::abs(find_max(_U, grid.imax(), grid.jmax()));
     double val_3 = grid.dy() / std::abs(find_max(_V, grid.imax(), grid.jmax()));
