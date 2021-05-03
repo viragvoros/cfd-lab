@@ -203,13 +203,15 @@ void Case::simulate() {
         }
 
         _field.calculate_velocities(_grid);
-        //output_vtk(t, output_counter);
+
+        if ( output_counter % 1000 == 0 || (output_counter < 200 && output_counter % 50 == 0)){
+             output_vtk(t, output_counter);
+        };
         t = t + dt;
         output_counter++;
     }
 
-    // We only plot the last timestep, otherwise our program would generate 10000 files (dt = 0.005).
-    output_vtk(timestep, output_counter);
+    output_vtk(t, output_counter);
 }
 
 void Case::output_vtk(int timestep, int my_rank) {
