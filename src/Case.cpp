@@ -201,7 +201,7 @@ void Case::simulate() {
             }
             nb_iter++;
         }
-        if (nb_iter = _max_iter+1){
+        if (nb_iter == _max_iter+1){
             std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter+1 << "\n"
                       << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
         }
@@ -211,9 +211,9 @@ void Case::simulate() {
        
         t = t + dt;
         output_counter++;
-        output_vtk(output_counter);
+        //output_vtk(output_counter);
     }
-
+        output_vtk(output_counter);
     
 }
 
