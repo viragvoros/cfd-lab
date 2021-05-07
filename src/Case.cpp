@@ -194,12 +194,16 @@ void Case::simulate() {
         _field.calculate_rs(_grid);
 
         int nb_iter = 0;
-        while (nb_iter <= 1000){
+        while (nb_iter <= _max_iter){
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance){
                 break;
             }
             nb_iter++;
+        }
+        if (nb_iter = _max_iter+1){
+            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter+1 << "\n"
+                      << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
         }
 
         _field.calculate_velocities(_grid);
@@ -213,7 +217,7 @@ void Case::simulate() {
     
 }
 
-void Case::output_vtk(int my_rank) {
+void Case::output_vtk(int file_number) {
     // Create a new structured grid
     vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
@@ -286,7 +290,7 @@ void Case::output_vtk(int my_rank) {
 
     // Create Filename
     std::string outputname =
-        _dict_name + '/' + _case_name + "_" + std::to_string(my_rank) + ".vtk";
+        _dict_name + '/' + _case_name + "_" + std::to_string(file_number) + ".vtk";
 
     writer->SetFileName(outputname.c_str());
     writer->SetInputData(structuredGrid);
