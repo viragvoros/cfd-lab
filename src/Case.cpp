@@ -204,17 +204,16 @@ void Case::simulate() {
 
         _field.calculate_velocities(_grid);
 
-        if ( output_counter % 1000 == 0 || (output_counter < 200 && output_counter % 50 == 0)){
-             output_vtk(t, output_counter);
-        };
+       
         t = t + dt;
         output_counter++;
+        output_vtk(output_counter);
     }
 
-    output_vtk(t, output_counter);
+    
 }
 
-void Case::output_vtk(int timestep, int my_rank) {
+void Case::output_vtk(int my_rank) {
     // Create a new structured grid
     vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
@@ -287,7 +286,7 @@ void Case::output_vtk(int timestep, int my_rank) {
 
     // Create Filename
     std::string outputname =
-        _dict_name + '/' + _case_name + "_" + std::to_string(my_rank) + "." + std::to_string(timestep) + ".vtk";
+        _dict_name + '/' + _case_name + "_" + std::to_string(my_rank) + ".vtk";
 
     writer->SetFileName(outputname.c_str());
     writer->SetInputData(structuredGrid);
