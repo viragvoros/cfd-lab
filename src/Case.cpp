@@ -211,9 +211,8 @@ void Case::simulate() {
        
         t = t + dt;
         output_counter++;
-        //output_vtk(output_counter);
-    }
         output_vtk(output_counter);
+    }
     
 }
 
