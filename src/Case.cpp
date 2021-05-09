@@ -96,7 +96,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     _max_iter = itermax;
     _tolerance = eps;
 
-
     // Construct boundaries
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
@@ -181,7 +180,7 @@ void Case::simulate() {
     // Changed to integer to use as input parameter for vtk file generation
     int output_counter = 0;
 
-    while (t <= _t_end){
+    while (t <= _t_end) {
         // Calculate optimum timestep
         dt = _field.calculate_dt(_grid);
 
@@ -194,26 +193,24 @@ void Case::simulate() {
         _field.calculate_rs(_grid);
 
         int nb_iter = 0;
-        while (nb_iter <= _max_iter){
+        while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
-            if (res <= _tolerance){
+            if (res <= _tolerance) {
                 break;
             }
             nb_iter++;
         }
-        if (nb_iter == _max_iter+1){
-            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter+1 << "\n"
+        if (nb_iter == _max_iter + 1) {
+            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\n"
                       << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
         }
 
         _field.calculate_velocities(_grid);
 
-       
         t = t + dt;
         output_counter++;
         output_vtk(output_counter);
     }
-    
 }
 
 void Case::output_vtk(int file_number) {
@@ -288,8 +285,7 @@ void Case::output_vtk(int file_number) {
     vtkSmartPointer<vtkStructuredGridWriter> writer = vtkSmartPointer<vtkStructuredGridWriter>::New();
 
     // Create Filename
-    std::string outputname =
-        _dict_name + '/' + _case_name + "_" + std::to_string(file_number) + ".vtk";
+    std::string outputname = _dict_name + '/' + _case_name + "_" + std::to_string(file_number) + ".vtk";
 
     writer->SetFileName(outputname.c_str());
     writer->SetInputData(structuredGrid);
