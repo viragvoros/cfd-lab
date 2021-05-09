@@ -39,6 +39,17 @@ Case::Case(std::string file_name, int argn, char **args) {
     double tau;     /* safety factor for time step*/
     int itermax;    /* max. number of iterations for pressure per time step */
     double eps;     /* accuracy bound for pressure*/
+    int iproc;
+    int jproc;
+    double UIN;     /* inlet velocity x-direction */ 
+    double VIN;     /* inlet velocity y-direction */
+    int num_of_walls;       /* number of walls */
+    std::string energy_eq;  /* heat energy on */
+    double TI;      /* initial temperature */
+    double TIN;     /* inlet temperature */
+    double beta;    /* thermal expansion coefficient */
+    double alpha;   /* thermal diffusivity */
+
 
     if (file.is_open()) {
 
@@ -48,6 +59,7 @@ Case::Case(std::string file_name, int argn, char **args) {
             if (var[0] == '#') { /* ignore comment line*/
                 file.ignore(MAX_LINE_LENGTH, '\n');
             } else {
+                if (var == "geo_file") file >> _geom_name;
                 if (var == "xlength") file >> xlength;
                 if (var == "ylength") file >> ylength;
                 if (var == "nu") file >> nu;
@@ -66,6 +78,16 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "itermax") file >> itermax;
                 if (var == "imax") file >> imax;
                 if (var == "jmax") file >> jmax;
+                if (var == "iproc") file >> iproc;
+                if (var == "jproc") file >> jproc;
+                if (var == "UIN") file >> UIN;
+                if (var == "VIN") file >> VIN;
+                if (var == "num_of_walls") file >> num_of_walls;
+                if (var == "energy_eq") file >> energy_eq;
+                if (var == "TI") file >> TI;
+                if (var == "TIN") file >> TIN;
+                if (var == "beta") file >> beta; 
+                if (var == "alpha") file >> alpha;
             }
         }
     }
@@ -74,6 +96,18 @@ Case::Case(std::string file_name, int argn, char **args) {
     std::map<int, double> wall_vel;
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
+    }
+
+    if (_geom_name.compare("ChannelWithObstacle.pgm") == 0) {
+        // TODO
+    }
+
+    if (_geom_name.compare("FluidTrap.pgm") == 0) {
+        // TODO
+    }
+    
+    if (_geom_name.compare("RayleighBenard.pgm") == 0) {
+        // TODO
     }
 
     // Set file names for geometry file and output directory
