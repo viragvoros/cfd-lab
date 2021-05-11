@@ -14,7 +14,7 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
         int i = cell->i();
         int j = cell->j();
 
-        if (not cell_borders.empty()) {
+        if (cell_borders.size() == 1) {
 
             for (const auto & elem : cell_borders) {
                 if (static_cast<int>(elem) == 0) {      // border is in TOP position (fluid cell above ghost cell)
@@ -51,6 +51,54 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                 }
             }
         }
+
+        else if (cell_borders.size() == 2) {
+            
+            if ( (cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::RIGHT)
+                || (cell_borders[0] == border_position::RIGHT && cell_borders[1] == border_position::TOP) ) {   // borders in TOP and RIGHT position
+
+                field.u(i,j) = 0;
+                field.v(i,j) = 0;
+                field.u(i-1,j) = - field.u(i-1,j+1);
+                field.v(i,j-1) = - field.v(i+1,j-1);
+                field.p(i,j) = 0.5*(field.p(i+1,j) + field.p(i,j+1));
+                field.f(i,j) = field.u(i,j);
+                field.g(i,j) = field.v(i,j);
+            }
+            else if ( (cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) 
+                || (cell_borders[0] == border_position::LEFT && cell_borders[1] == border_position::TOP) ) {
+                
+                field.u(i,j) = - field.u(i,j+1);
+                field.v(i,j) = 0;
+                field.u(i-1,j) = 0;
+                field.v(i,j-1) = - field.v(i-1,j-1);
+                field.p(i,j) = 0.5*(field.p(i-1,j) + field.p(i,j+1));
+                field.f(i,j) = field.u(i,j);
+                field.g(i,j) = field.v(i,j);
+            }
+            else if ( (cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) 
+                || (cell_borders[0] == border_position::RIGHT && cell_borders[1] == border_position::BOTTOM) ) {
+                
+                field.u(i,j) = 0;
+                field.v(i,j) = - field.v(i+1,j);
+                field.u(i-1,j) = - field.u(i-1,j-1);
+                field.v(i,j-1) = 0;
+                field.p(i,j) = 0.5*(field.p(i+1,j) + field.p(i,j-1));
+                field.f(i,j) = field.u(i,j);
+                field.g(i,j) = field.v(i,j);
+                }
+            else if ( (cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) 
+                || (cell_borders[0] == border_position::LEFT && cell_borders[1] == border_position::BOTTOM) ) {
+
+                field.u(i,j) = - field.u(i,j-1);
+                field.v(i,j) = - field.v(i-1,j);
+                field.u(i-1,j) = 0;
+                field.v(i,j-1) = 0;
+                field.p(i,j) = 0.5*(field.p(i-1,j) + field.p(i,j-1));
+                field.f(i,j) = field.u(i,j);
+                field.g(i,j) = field.v(i,j);
+                }
+        }
     }
 }
 
@@ -68,7 +116,7 @@ void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
         int i = cell->i();
         int j = cell->j();
 
-        if (not cell_borders.empty()) {
+        if (cell_borders.size() == 1) {
 
             for (const auto & elem : cell_borders) {
                 if (static_cast<int>(elem) == 0) {      // border is in TOP position (fluid cell above ghost cell)
@@ -104,6 +152,10 @@ void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j) = field.v(i,j);
                 }
             }
+        }
+
+        else if (cell_borders.size() == 2) {
+
         }
     }
 
