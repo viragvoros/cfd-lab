@@ -243,7 +243,11 @@ void Case::simulate() {
 
         t = t + dt;
         output_counter++;
-        output_vtk(output_counter);
+
+        if (output_counter == 100 || output_counter % 10000 == 0){
+            output_vtk(output_counter); 
+        }
+            
     }
 }
 
