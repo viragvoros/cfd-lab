@@ -4,15 +4,26 @@
 #include <cmath>
 #include <iostream>
 
-Fields::Fields(double nu, double dt, double tau, int imax, int jmax, double UI, double VI, double PI)
-    : _nu(nu), _dt(dt), _tau(tau) {
-    _U = Matrix<double>(imax + 2, jmax + 2, UI);
-    _V = Matrix<double>(imax + 2, jmax + 2, VI);
-    _P = Matrix<double>(imax + 2, jmax + 2, PI);
+Fields::Fields(double nu, double dt, double tau, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI)
+    : _nu(nu), _dt(dt), _tau(tau), _cells(cells) {
+    _U = Matrix<double>(imax + 2, jmax + 2);
+    _V = Matrix<double>(imax + 2, jmax + 2);
+    _P = Matrix<double>(imax + 2, jmax + 2);
 
     _F = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _G = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _RS = Matrix<double>(imax + 2, jmax + 2, 0.0);
+
+        for (const auto &cell : _cells) {
+            int i = cell->i();
+            int j = cell->j();
+
+            if (cell->type() == cell_type::FLUID) {
+                u(i, j) = UI;
+                v(i, j) = VI;
+                p(i, j) = PI;
+            }
+        }
 }
 
 void Fields::calculate_fluxes(Grid &grid) {

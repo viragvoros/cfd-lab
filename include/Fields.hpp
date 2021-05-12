@@ -25,7 +25,7 @@ class Fields {
      * @param[in] initial pressure
      *
      */
-    Fields(double _nu, double _dt, double _tau, int imax, int jmax, double UI, double VI, double PI);
+    Fields(double _nu, double _dt, double _tau, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
@@ -111,4 +111,6 @@ class Fields {
     double _dt;
     /// adaptive timestep coefficient
     double _tau;
+    /// fluid cells
+    std::vector<Cell *> _cells;
 };

@@ -110,15 +110,25 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
 
     if (_geom_name.compare("ChannelWithObstacle.pgm") == 0) {
-        // TODO
+        /* TODO, idea for implementation
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
+        */
     }
 
     if (_geom_name.compare("FluidTrap.pgm") == 0) {
-        // TODO
+        /* TODO, idea for implementation
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_4, wall_vel_4));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_5, wall_vel_5));
+        */
     }
 
     if (_geom_name.compare("RayleighBenard.pgm") == 0) {
-        // TODO
+        /* TODO, idea for implementation
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_4, wall_vel_4));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_5, wall_vel_5));
+        */
     }
 
     // Set file names for geometry file and output directory
@@ -134,7 +144,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
+    _field = Fields(nu, dt, tau, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg);
