@@ -41,15 +41,14 @@ Case::Case(std::string file_name, int argn, char **args) {
     double eps;     /* accuracy bound for pressure*/
     int iproc;
     int jproc;
-    double UIN;     /* inlet velocity x-direction */ 
-    double VIN;     /* inlet velocity y-direction */
-    int num_of_walls;       /* number of walls */
-    std::string energy_eq;  /* heat energy on */
-    double TI;      /* initial temperature */
-    double TIN;     /* inlet temperature */
-    double beta;    /* thermal expansion coefficient */
-    double alpha;   /* thermal diffusivity */
-
+    double UIN;            /* inlet velocity x-direction */
+    double VIN;            /* inlet velocity y-direction */
+    int num_of_walls;      /* number of walls */
+    std::string energy_eq; /* heat energy on */
+    double TI;             /* initial temperature */
+    double TIN;            /* inlet temperature */
+    double beta;           /* thermal expansion coefficient */
+    double alpha;          /* thermal diffusivity */
 
     if (file.is_open()) {
 
@@ -86,7 +85,7 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "energy_eq") file >> energy_eq;
                 if (var == "TI") file >> TI;
                 if (var == "TIN") file >> TIN;
-                if (var == "beta") file >> beta; 
+                if (var == "beta") file >> beta;
                 if (var == "alpha") file >> alpha;
             }
         }
@@ -105,7 +104,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (_geom_name.compare("FluidTrap.pgm") == 0) {
         // TODO
     }
-    
+
     if (_geom_name.compare("RayleighBenard.pgm") == 0) {
         // TODO
     }
@@ -135,8 +134,8 @@ Case::Case(std::string file_name, int argn, char **args) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
     }
-    if (not _grid.fixed_wall_cells().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells()));
+    if (not _grid.fixed_wall_cells_3().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3()));
     }
 }
 
@@ -244,10 +243,9 @@ void Case::simulate() {
         t = t + dt;
         output_counter++;
 
-        if (output_counter == 100 || output_counter % 10000 == 0){
-            output_vtk(output_counter); 
+        if (output_counter == 100 || output_counter % 10000 == 0) {
+            output_vtk(output_counter);
         }
-            
     }
 }
 

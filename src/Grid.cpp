@@ -2,11 +2,11 @@
 #include "Enums.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <cassert>
 
 Grid::Grid(std::string geom_name, Domain &domain) {
 
@@ -47,43 +47,47 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
 
     int i = 0;
     int j = 0;
-     
 
     for (int j_geom = _domain.jmin; j_geom < _domain.jmax; ++j_geom) {
-        {
-            i = 0;
-        }
+        { i = 0; }
 
-              
         for (int i_geom = _domain.imin; i_geom < _domain.imax; ++i_geom) {
             if (geometry_data.at(i_geom).at(j_geom) == 0) {
-               _cells(i, j) = Cell(i, j, cell_type::FLUID);
-               _fluid_cells.push_back(&_cells(i, j));
-           } else if (geometry_data.at(i_geom).at(j_geom) == 1) {
-               _cells(i, j) = Cell(i, j, cell_type::MOVING_WALL, geometry_data.at(i_geom).at(j_geom));
-               _moving_wall_cells.push_back(&_cells(i, j));
-           } else if (geometry_data.at(i_geom).at(j_geom) == 2) {
-               _cells(i, j) = Cell(i, j, cell_type::FREE_SLIP, geometry_data.at(i_geom).at(j_geom));
-               _free_slip_cells.push_back(&_cells(i, j));
-           } else if (geometry_data.at(i_geom).at(j_geom) == 3) {
-               _cells(i, j) = Cell(i, j, cell_type::FIXED_WALL, geometry_data.at(i_geom).at(j_geom));
-               _fixed_wall_cells.push_back(&_cells(i, j));
-           } else if (geometry_data.at(i_geom).at(j_geom) == 4) {
-               _cells(i, j) = Cell(i, j, cell_type::INFLOW);
-               _inflow_cells.push_back(&_cells(i, j));
-           } else {
-               if (geometry_data.at(i_geom).at(j_geom) == 5){
-               _cells(i, j) = Cell(i, j, cell_type::OUTFLOW);
-               _outflow_cells.push_back(&_cells(i, j));
+                _cells(i, j) = Cell(i, j, cell_type::FLUID);
+                _fluid_cells.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 8) {
+                _cells(i, j) = Cell(i, j, cell_type::MOVING_WALL, geometry_data.at(i_geom).at(j_geom));
+                _moving_wall_cells.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 7) {
+                _cells(i, j) = Cell(i, j, cell_type::FREE_SLIP, geometry_data.at(i_geom).at(j_geom));
+                _free_slip_cells.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 3) {
+                _cells(i, j) = Cell(i, j, cell_type::WALL_3, geometry_data.at(i_geom).at(j_geom));
+                _fixed_wall_cells_3.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 4) {
+                _cells(i, j) = Cell(i, j, cell_type::WALL_4, geometry_data.at(i_geom).at(j_geom));
+                _fixed_wall_cells_4.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 5) {
+                _cells(i, j) = Cell(i, j, cell_type::WALL_5, geometry_data.at(i_geom).at(j_geom));
+                _fixed_wall_cells_5.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 6) {
+                _cells(i, j) = Cell(i, j, cell_type::WALL_6, geometry_data.at(i_geom).at(j_geom));
+                _fixed_wall_cells_6.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 1) {
+                _cells(i, j) = Cell(i, j, cell_type::INFLOW);
+                _inflow_cells.push_back(&_cells(i, j));
+            } else {
+                if (geometry_data.at(i_geom).at(j_geom) == 2) {
+                    _cells(i, j) = Cell(i, j, cell_type::OUTFLOW);
+                    _outflow_cells.push_back(&_cells(i, j));
                 }
-           }
-        //     else {
-        //         if (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1) {
-        //             // Outer walls
-        //             _cells(i, j) = Cell(i, j, cell_type::FIXED_WALL, geometry_data.at(i_geom).at(j_geom));
-        //             _fixed_wall_cells.push_back(&_cells(i, j));
-        //         }
-        
+            }
+            //     else {
+            //         if (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1) {
+            //             // Outer walls
+            //             _cells(i, j) = Cell(i, j, cell_type::FIXED_WALL, geometry_data.at(i_geom).at(j_geom));
+            //             _fixed_wall_cells.push_back(&_cells(i, j));
+            //         }
 
             ++i;
         }
@@ -264,14 +268,13 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
         }
     }
 
-//      for (int j = 0; j < numcols; j++ ){
-      
-//       for (int i = 0; i < numrows; i++) {
-//           std::cout << geometry_data[i][j] << " " ;
-//        }
-//        std::cout << "\n";
-//    }
+    //      for (int j = 0; j < numcols; j++ ){
 
+    //       for (int i = 0; i < numrows; i++) {
+    //           std::cout << geometry_data[i][j] << " " ;
+    //        }
+    //        std::cout << "\n";
+    //    }
 
     infile.close();
 }
@@ -292,8 +295,18 @@ const Domain &Grid::domain() const { return _domain; }
 
 const std::vector<Cell *> &Grid::fluid_cells() const { return _fluid_cells; }
 
-const std::vector<Cell *> &Grid::fixed_wall_cells() const { return _fixed_wall_cells; }
+const std::vector<Cell *> &Grid::fixed_wall_cells_3() const { return _fixed_wall_cells_3; }
+
+const std::vector<Cell *> &Grid::fixed_wall_cells_4() const { return _fixed_wall_cells_4; }
+
+const std::vector<Cell *> &Grid::fixed_wall_cells_5() const { return _fixed_wall_cells_5; }
+
+const std::vector<Cell *> &Grid::fixed_wall_cells_6() const { return _fixed_wall_cells_6; }
+
+const std::vector<Cell *> &Grid::outflow_cells() const { return _outflow_cells; }
+
+const std::vector<Cell *> &Grid::inflow_cells() const { return _inflow_cells; }
+
+const std::vector<Cell *> &Grid::free_slip() const { return _free_slip_cells; }
 
 const std::vector<Cell *> &Grid::moving_wall_cells() const { return _moving_wall_cells; }
-
-
