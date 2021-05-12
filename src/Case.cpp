@@ -41,14 +41,20 @@ Case::Case(std::string file_name, int argn, char **args) {
     double eps;     /* accuracy bound for pressure*/
     int iproc;
     int jproc;
-    double UIN;            /* inlet velocity x-direction */
-    double VIN;            /* inlet velocity y-direction */
-    int num_of_walls;      /* number of walls */
-    std::string energy_eq; /* heat energy on */
-    double TI;             /* initial temperature */
-    double TIN;            /* inlet temperature */
-    double beta;           /* thermal expansion coefficient */
-    double alpha;          /* thermal diffusivity */
+    double UIN;             /* inlet velocity x-direction */
+    double VIN;             /* inlet velocity y-direction */
+    int num_of_walls;       /* number of walls */
+    std::string energy_eq;  /* heat energy on */
+    double TI;              /* initial temperature */
+    double TIN;             /* inlet temperature */
+    double beta;            /* thermal expansion coefficient */
+    double alpha;           /* thermal diffusivity */
+    double wall_temp_3;     /* wall (id 3) temperature */
+    double wall_temp_4;     /* wall (id 4) temperature */
+    double wall_temp_5;     /* wall (id 5) temperature */
+    double wall_vel_3;      /* wall (id 3) velocity */
+    double wall_vel_4;      /* wall (id 4) velocity */
+    double wall_vel_5;      /* wall (id 5) velocity */  
 
     if (file.is_open()) {
 
@@ -87,6 +93,12 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "TIN") file >> TIN;
                 if (var == "beta") file >> beta;
                 if (var == "alpha") file >> alpha;
+                if (var == "wall_temp_3") file >> wall_temp_3;
+                if (var == "wall_temp_4") file >> wall_temp_4;
+                if (var == "wall_temp_5") file >> wall_temp_5;
+                if (var == "wall_vel_3") file >> wall_vel_3;
+                if (var == "wall_vel_4") file >> wall_vel_4;
+                if (var == "wall_vel_5") file >> wall_vel_5;
             }
         }
     }
