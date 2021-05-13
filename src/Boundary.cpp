@@ -8,7 +8,7 @@ FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells) : _cells(cells) 
 FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature)
     : _cells(cells), _wall_temperature(wall_temperature) {}
 
-void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
+void FixedWallBoundary::apply(Fields &field) {
     for (const auto & cell : _cells) {
         std::vector<border_position> cell_borders = cell->borders();
         int i = cell->i();
@@ -18,7 +18,6 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
 
             for (const auto & elem : cell_borders) {
                 if (static_cast<int>(elem) == 0) {      // border is in TOP position (fluid cell above ghost cell)
-                    assert(j == 0);
                     field.u(i,j) = -field.u(i,j+1);     
                     field.v(i,j) = 0;
                     field.p(i,j) = field.p(i,j+1);
@@ -26,7 +25,6 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j) = field.v(i,j);
                 }
                 else if (static_cast<int>(elem) == 1) { // border is in BOTTOM position (fluid cell under ghost cell)
-                    assert(j == jmax + 1);
                     field.u(i,j)   = - field.u(i,j-1);
                     field.v(i,j-1) = 0;
                     field.p(i,j)   = field.p(i,j-1);
@@ -34,7 +32,6 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j-1)   = field.v(i,j-1);
                 }
                 else if (static_cast<int>(elem) == 2) { // border is in LEFT position (fluid cell is left from ghost cell)
-                    assert( i == imax + 1);
                     field.u(i-1,j) = 0;
                     field.v(i,j)   = - field.v(i-1,j);
                     field.p(i,j)   = field.p(i-1,j);
@@ -42,7 +39,6 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j)   = field.v(i,j);
                 }
                 else if (static_cast<int>(elem) == 3) { // border is in RIGHT position (fluid cell is right from ghost cell)
-                    assert( i == 0);
                     field.u(i,j) = 0;
                     field.v(i,j) = - field.v(i+1,j);
                     field.p(i,j) = field.p(i+1,j);
@@ -66,7 +62,7 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                 field.g(i,j) = field.v(i,j);
             }
             else if ( (cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) 
-                || (cell_borders[0] == border_position::LEFT && cell_borders[1] == border_position::TOP) ) {
+                || (cell_borders[0] == border_position::LEFT && cell_borders[1] == border_position::TOP) ) {    // borders in TOP and LEFT position
                 
                 field.u(i,j) = - field.u(i,j+1);
                 field.v(i,j) = 0;
@@ -77,7 +73,7 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                 field.g(i,j) = field.v(i,j);
             }
             else if ( (cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) 
-                || (cell_borders[0] == border_position::RIGHT && cell_borders[1] == border_position::BOTTOM) ) {
+                || (cell_borders[0] == border_position::RIGHT && cell_borders[1] == border_position::BOTTOM) ) { // borders in BOTTOM and RIGHT position
                 
                 field.u(i,j) = 0;
                 field.v(i,j) = - field.v(i+1,j);
@@ -88,7 +84,7 @@ void FixedWallBoundary::apply(Fields &field, int imax, int jmax) {
                 field.g(i,j) = field.v(i,j);
                 }
             else if ( (cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) 
-                || (cell_borders[0] == border_position::LEFT && cell_borders[1] == border_position::BOTTOM) ) {
+                || (cell_borders[0] == border_position::LEFT && cell_borders[1] == border_position::BOTTOM) ) { // borders in BOTTOM and LEFT position
 
                 field.u(i,j) = - field.u(i,j-1);
                 field.v(i,j) = - field.v(i-1,j);
@@ -110,7 +106,7 @@ MovingWallBoundary::MovingWallBoundary(std::vector<Cell *> cells, std::map<int, 
                                        std::map<int, double> wall_temperature)
     : _cells(cells), _wall_velocity(wall_velocity), _wall_temperature(wall_temperature) {}
 
-void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
+void MovingWallBoundary::apply(Fields &field) {
      for (const auto & cell : _cells) {
         std::vector<border_position> cell_borders = cell->borders();
         int i = cell->i();
@@ -120,7 +116,6 @@ void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
 
             for (const auto & elem : cell_borders) {
                 if (static_cast<int>(elem) == 0) {      // border is in TOP position (fluid cell above ghost cell)
-                    assert( j == 0);
                     field.u(i,j) = 2 * _wall_velocity[LidDrivenCavity::moving_wall_id] - field.u(i,j+1);     
                     field.v(i,j) = 0;
                     field.p(i,j) = field.p(i,j+1);
@@ -128,7 +123,6 @@ void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j) = field.v(i,j);
                 }
                 else if (static_cast<int>(elem) == 1) { // border is in BOTTOM position (fluid cell under ghost cell)
-                    assert( j == jmax + 1);
                     field.u(i,j) = 2 * _wall_velocity[LidDrivenCavity::moving_wall_id] - field.u(i,j-1);
                     field.v(i,j-1) = 0;
                     field.p(i,j) = field.p(i,j-1);
@@ -136,7 +130,6 @@ void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j-1) = field.v(i,j-1);
                 }
                 else if (static_cast<int>(elem) == 2) { // border is in LEFT position (fluid cell left from ghost cell)
-                    assert( i == imax + 1);
                     field.u(i-1,j) = 0;
                     field.v(i,j) = 2 * _wall_velocity[LidDrivenCavity::moving_wall_id] - field.v(i-1,j);
                     field.p(i,j) = field.p(i-1,j);
@@ -144,7 +137,6 @@ void MovingWallBoundary::apply(Fields &field, int imax, int jmax) {
                     field.g(i,j) = field.v(i,j);
                 }
                 else if (static_cast<int>(elem) == 3) { // border is in RIGHT position (fluid cell right from ghost cell)
-                    assert( i == 0);
                     field.u(i,j) = 0;
                     field.v(i,j) = 2 * _wall_velocity[LidDrivenCavity::moving_wall_id] - field.v(i+1,j);
                     field.p(i,j) = field.p(i+1,j);
