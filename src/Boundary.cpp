@@ -8,6 +8,11 @@ FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells) : _cells(cells) 
 FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature)
     : _cells(cells), _wall_temperature(wall_temperature) {}
 
+// TODO replace placeholder namespace
+FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, double wall_temperature): _cells(cells) {
+    _wall_temperature.insert(std::pair(Placeholder::temperature_id, wall_temperature));
+}
+
 void FixedWallBoundary::apply(Fields &field) {
     for (const auto & cell : _cells) {
         std::vector<border_position> cell_borders = cell->borders();
@@ -154,7 +159,13 @@ void MovingWallBoundary::apply(Fields &field) {
 
 // TODO replace Placeholder namespace
 InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity): _cells(cells) {
-    _inflow_velocity.insert(std::pair(Placeholder::inflow_cell_id, inflow_velocity))
+    _inflow_velocity.insert(std::pair(Placeholder::inflow_cell_id, inflow_velocity));
+}
+
+// TODO replace Placeholder namespace
+InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature): _cells(cells) {
+    _inflow_velocity.insert(std::pair(Placeholder::inflow_cell_id, inflow_velocity));
+    _inflow_temperature.insert(std::pair(Placeholder::temperature_id, inflow_temperature));
 }
 
 InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, std::map<int,double> inflow_velocity, 
@@ -218,6 +229,12 @@ void InFlowBoundary::apply(Fields& field) {
 // TODO replace Placeholder namespace
 OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity): _cells(cells) {
     _outflow_velocity.insert(std::pair(Placeholder::outflow_cell_id), outflow_velocity)
+}
+
+// TODO replace Placeholder namespace
+OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity, double outflow_temperature): _cells(cells) {
+    _outflow_velocity.insert(std::pair(Placeholder::outflow_cell_id), outflow_velocity);
+    _outflow_temperature.insert(std::pair(Placeholder::temperature_id, outflow_temperature));
 }
 
 OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, std::map<int, double> outflow_velocity,

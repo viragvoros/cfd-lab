@@ -32,6 +32,7 @@ class FixedWallBoundary : public Boundary {
   public:
     FixedWallBoundary(std::vector<Cell *> cells);
     FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature);
+    FixedWallBoundary(std::vector<Cell *> cells, double wall_temperature);
     virtual ~FixedWallBoundary() = default;
     virtual void apply(Fields &field);
 
@@ -67,6 +68,7 @@ class MovingWallBoundary : public Boundary {
 class InFlowBoundary : public Boundary {
   public:
     InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity);
+    InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature);
     InFlowBoundary(std::vector<Cell *> cells, std::map<int, double> inflow_velocity,
                        std::map<int, double> inflow_temperature);
     virtual ~InFlowBoundary() = default;
@@ -86,6 +88,7 @@ class InFlowBoundary : public Boundary {
 class OutFlowBoundary : public Boundary {
   public:
     OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity);
+    OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity, double outflow_temperature);
     OutFlowBoundary(std::vector<Cell *> cells, std::map<int, double> outflow_velocity,
                        std::map<int, double> outflow_temperature);
     virtual ~InFlowBoundary() = default;
