@@ -91,7 +91,7 @@ class OutFlowBoundary : public Boundary {
     OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity, double outflow_temperature);
     OutFlowBoundary(std::vector<Cell *> cells, std::map<int, double> outflow_velocity,
                        std::map<int, double> outflow_temperature);
-    virtual ~InFlowBoundary() = default;
+    virtual ~OutFlowBoundary() = default;
     virtual void apply(Fields &field);
 
   private:

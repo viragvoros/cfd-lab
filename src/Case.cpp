@@ -39,6 +39,22 @@ Case::Case(std::string file_name, int argn, char **args) {
     double tau;     /* safety factor for time step*/
     int itermax;    /* max. number of iterations for pressure per time step */
     double eps;     /* accuracy bound for pressure*/
+    int iproc;
+    int jproc;
+    double UIN;            /* inlet velocity x-direction */
+    double VIN;            /* inlet velocity y-direction */
+    int num_of_walls;      /* number of walls */
+    std::string energy_eq; /* heat energy on */
+    double TI;             /* initial temperature */
+    double TIN;            /* inlet temperature */
+    double beta;           /* thermal expansion coefficient */
+    double alpha;          /* thermal diffusivity */
+    double wall_temp_3;    /* wall (id 3) temperature */
+    double wall_temp_4;    /* wall (id 4) temperature */
+    double wall_temp_5;    /* wall (id 5) temperature */
+    double wall_vel_3;     /* wall (id 3) velocity */
+    double wall_vel_4;     /* wall (id 4) velocity */
+    double wall_vel_5;     /* wall (id 5) velocity */
 
     if (file.is_open()) {
 
@@ -48,6 +64,7 @@ Case::Case(std::string file_name, int argn, char **args) {
             if (var[0] == '#') { /* ignore comment line*/
                 file.ignore(MAX_LINE_LENGTH, '\n');
             } else {
+                if (var == "geo_file") file >> _geom_name;
                 if (var == "xlength") file >> xlength;
                 if (var == "ylength") file >> ylength;
                 if (var == "nu") file >> nu;
@@ -66,6 +83,22 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "itermax") file >> itermax;
                 if (var == "imax") file >> imax;
                 if (var == "jmax") file >> jmax;
+                if (var == "iproc") file >> iproc;
+                if (var == "jproc") file >> jproc;
+                if (var == "UIN") file >> UIN;
+                if (var == "VIN") file >> VIN;
+                if (var == "num_of_walls") file >> num_of_walls;
+                if (var == "energy_eq") file >> energy_eq;
+                if (var == "TI") file >> TI;
+                if (var == "TIN") file >> TIN;
+                if (var == "beta") file >> beta;
+                if (var == "alpha") file >> alpha;
+                if (var == "wall_temp_3") file >> wall_temp_3;
+                if (var == "wall_temp_4") file >> wall_temp_4;
+                if (var == "wall_temp_5") file >> wall_temp_5;
+                if (var == "wall_vel_3") file >> wall_vel_3;
+                if (var == "wall_vel_4") file >> wall_vel_4;
+                if (var == "wall_vel_5") file >> wall_vel_5;
             }
         }
     }
@@ -74,6 +107,28 @@ Case::Case(std::string file_name, int argn, char **args) {
     std::map<int, double> wall_vel;
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
+    }
+
+    if (_geom_name.compare("ChannelWithObstacle.pgm") == 0) {
+        /* TODO, idea for implementation
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
+        */
+    }
+
+    if (_geom_name.compare("FluidTrap.pgm") == 0) {
+        /* TODO, idea for implementation
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_4, wall_vel_4));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_5, wall_vel_5));
+        */
+    }
+
+    if (_geom_name.compare("RayleighBenard.pgm") == 0) {
+        /* TODO, idea for implementation
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_4, wall_vel_4));
+        wall_vel.insert(std::pair<int, double>(cell_type::WALL_5, wall_vel_5));
+        */
     }
 
     // Set file names for geometry file and output directory
@@ -89,21 +144,20 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
+    _field = Fields(nu, dt, tau, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg);
     _max_iter = itermax;
     _tolerance = eps;
 
-
     // Construct boundaries
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
     }
-    if (not _grid.fixed_wall_cells().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells()));
+    if (not _grid.fixed_wall_cells_3().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3()));
     }
 }
 
@@ -181,40 +235,43 @@ void Case::simulate() {
     // Changed to integer to use as input parameter for vtk file generation
     int output_counter = 0;
 
-    while (t <= _t_end){
+    while (t <= _t_end) {
         // Calculate optimum timestep
         dt = _field.calculate_dt(_grid);
 
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
-            boundary->apply(_field, _grid.imax(), _grid.jmax());
+            boundary->apply(_field);
         }
 
         _field.calculate_fluxes(_grid);
         _field.calculate_rs(_grid);
 
         int nb_iter = 0;
-        while (nb_iter <= 1000){
+        while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
-            if (res <= _tolerance){
+            if (res <= _tolerance) {
                 break;
             }
             nb_iter++;
         }
+        if (nb_iter == _max_iter + 1) {
+            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\n"
+                      << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
+        }
 
         _field.calculate_velocities(_grid);
 
-        if ( output_counter % 1000 == 0 || (output_counter < 200 && output_counter % 50 == 0)){
-             output_vtk(t, output_counter);
-        };
         t = t + dt;
         output_counter++;
-    }
 
-    output_vtk(t, output_counter);
+        if (output_counter == 100 || output_counter % 10000 == 0) {
+            output_vtk(output_counter);
+        }
+    }
 }
 
-void Case::output_vtk(int timestep, int my_rank) {
+void Case::output_vtk(int file_number) {
     // Create a new structured grid
     vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
@@ -286,8 +343,7 @@ void Case::output_vtk(int timestep, int my_rank) {
     vtkSmartPointer<vtkStructuredGridWriter> writer = vtkSmartPointer<vtkStructuredGridWriter>::New();
 
     // Create Filename
-    std::string outputname =
-        _dict_name + '/' + _case_name + "_" + std::to_string(my_rank) + "." + std::to_string(timestep) + ".vtk";
+    std::string outputname = _dict_name + '/' + _case_name + "_" + std::to_string(file_number) + ".vtk";
 
     writer->SetFileName(outputname.c_str());
     writer->SetInputData(structuredGrid);
