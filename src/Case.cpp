@@ -105,31 +105,44 @@ Case::Case(std::string file_name, int argn, char **args) {
     file.close();
 
     std::map<int, double> wall_vel;
+    std::map<int,double> wall_temp;
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
     }
+    else {
+        // IDEA: construct maps of ids and velocities/temperatures for constructors of boundaries
+        wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
+        wall_vel[boundary_ids::fixed_wall_cell_4_id] = wall_vel_4;
+        wall_vel[boundary_ids::fixed_wall_cell_5_id] = wall_vel_5;
 
+        wall_temp[boundary_ids::fixed_wall_cell_3_id] = wall_temp_3;
+        wall_temp[boundary_ids::fixed_wall_cell_4_id] = wall_temp_4;
+        wall_temp[boundary_ids::fixed_wall_cell_5_id] = wall_temp_5;
+    }
+
+    /*
     if (_geom_name.compare("ChannelWithObstacle.pgm") == 0) {
-        /* TODO, idea for implementation
+        // TODO, idea for implementation
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
-        */
+        
     }
 
     if (_geom_name.compare("FluidTrap.pgm") == 0) {
-        /* TODO, idea for implementation
+        // TODO, idea for implementation
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_4, wall_vel_4));
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_5, wall_vel_5));
-        */
+        
     }
 
     if (_geom_name.compare("RayleighBenard.pgm") == 0) {
-        /* TODO, idea for implementation
+        // TODO, idea for implementation
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_3, wall_vel_3));
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_4, wall_vel_4));
         wall_vel.insert(std::pair<int, double>(cell_type::WALL_5, wall_vel_5));
-        */
+        
     }
+    */
 
     // Set file names for geometry file and output directory
     set_file_names(file_name);
