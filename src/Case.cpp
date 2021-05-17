@@ -172,6 +172,21 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3()));
     }
+    if (not _grid.fixed_wall_cells_4().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4()));
+    }
+    if (not _grid.fixed_wall_cells_5().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5()));
+    }
+    if (not _grid.fixed_wall_cells_6().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_6()));
+    }
+    if (not _grid.inflow_cells().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.inflow_cells()));
+    }
+    if (not _grid.outflow_cells().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.outflow_cells()));
+    }
 }
 
 void Case::set_file_names(std::string file_name) {
