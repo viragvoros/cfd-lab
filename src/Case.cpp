@@ -114,7 +114,6 @@ Case::Case(std::string file_name, int argn, char **args) {
         wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
         wall_vel[boundary_ids::fixed_wall_cell_4_id] = wall_vel_4;
         wall_vel[boundary_ids::fixed_wall_cell_5_id] = wall_vel_5;
-
         wall_temp[boundary_ids::fixed_wall_cell_3_id] = wall_temp_3;
         wall_temp[boundary_ids::fixed_wall_cell_4_id] = wall_temp_4;
         wall_temp[boundary_ids::fixed_wall_cell_5_id] = wall_temp_5;
@@ -131,13 +130,15 @@ Case::Case(std::string file_name, int argn, char **args) {
     domain.domain_size_x = imax;
     domain.domain_size_y = jmax;
 
+    
+
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
     _field = Fields(nu, dt, tau, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
-    _pressure_solver = std::make_unique<SOR>(omg);
+    _pressure_solver = std::make_unique<SOR>(omg); // Ask: What does that do?
     _max_iter = itermax;
     _tolerance = eps;
 
@@ -145,8 +146,10 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
+            std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
+        std::cout << "Hello3"<< std::endl;
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3()));
     }
     if (not _grid.fixed_wall_cells_4().empty()) {
@@ -161,11 +164,15 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     */
     if (not _grid.inflow_cells().empty()) {
+        std::cout << "Hello inflow"<< std::endl;
         _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN));
     }
     if (not _grid.outflow_cells().empty()) {
+        std::cout << "Hello outflow"<< std::endl;
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), UIN, TIN));
     }
+
+    //std::cout << _boundaries.size() << std::endl; // is this supposed to be only 3? How is this organised?
 }
 
 void Case::set_file_names(std::string file_name) {
@@ -236,6 +243,7 @@ void Case::set_file_names(std::string file_name) {
  */
 void Case::simulate() {
 
+    std::cout << "Entering simulate" << std::endl;
     double t = 0.0;
     double dt = _field.dt();
     int timestep = 0;
@@ -245,10 +253,11 @@ void Case::simulate() {
     while (t <= _t_end) {
         // Calculate optimum timestep
         dt = _field.calculate_dt(_grid);
-
+        std::cout << dt << std::endl;
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
+            //std::cout << "Entering apply boundaries" << std::endl;
         }
 
         _field.calculate_fluxes(_grid);
@@ -258,10 +267,13 @@ void Case::simulate() {
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance) {
+                std::cout << res << std::endl;
                 break;
             }
             nb_iter++;
+            
         }
+        
         if (nb_iter == _max_iter + 1) {
             std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\n"
                       << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
@@ -269,13 +281,47 @@ void Case::simulate() {
 
         _field.calculate_velocities(_grid);
 
+        //  for (int jx = 0; jx < 22; jx++ ){
+        //          for (int ix = 0; ix < 102; ix++) {
+        //              std::cout << _field.u(ix, jx) << " " ;
+        //             }
+        //         std::cout << "\n";
+        //      }
+
+    //     std::cout << "---------------------- u field ------------------------------" << std::endl;
+    //  for (int jx = 0; jx < 22; jx++ ){
+    //              for (int ix = 0; ix < 102; ix++) {
+    //                  std::cout << _field.u(ix, jx) << " " ;
+    //                 }
+    //             std::cout << "\n";
+    //          }
+
+    // std::cout << "---------------------- v field ------------------------------" << std::endl;
+    //  for (int jx = 0; jx < 22; jx++ ){
+    //              for (int ix = 0; ix < 102; ix++) {
+    //                  std::cout << _field.v(ix, jx) << " " ;
+    //                 }
+    //             std::cout << "\n";
+    //          }
+
         t = t + dt;
         output_counter++;
 
-        if (output_counter == 100 || output_counter % 10000 == 0) {
+       
+
+        if (output_counter == 10 || output_counter % 100 == 0) {
             output_vtk(output_counter);
         }
+
+    //     // Additional application of boundary conditions as mentioned in tutorial.
+    // for (auto &boundary : _boundaries) {
+    //     boundary->apply(_field);
+    // }
     }
+
+
+     output_vtk(output_counter);
+    
 }
 
 void Case::output_vtk(int file_number) {

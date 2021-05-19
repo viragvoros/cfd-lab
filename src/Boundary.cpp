@@ -18,7 +18,15 @@ void FixedWallBoundary::apply(Fields &field) {
         int i = cell->i();
         int j = cell->j();
 
-        if (cell_borders.size() == 1) {
+        if (cell_borders.empty()){
+            field.u(i, j) = 0;
+                field.v(i, j) = 0;
+                field.p(i, j) = 0;
+                field.f(i, j) = 0;
+                field.g(i, j) = 0;
+        }
+
+        if (cell_borders.size() == 1) { // One  neighbour
 
             if (cell_borders[0] == border_position::TOP) { // border is in TOP position (fluid cell above ghost cell)
                 field.u(i, j) = -field.u(i, j + 1);
@@ -52,9 +60,12 @@ void FixedWallBoundary::apply(Fields &field) {
 
         else if (cell_borders.size() == 2) {
 
+            
+
             if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::RIGHT) ||
                 (cell_borders[0] == border_position::RIGHT &&
                  cell_borders[1] == border_position::TOP)) { // borders in TOP and RIGHT position
+                 //std::cout << "Top Right" << std::endl;
 
                 field.u(i, j) = 0;
                 field.v(i, j) = 0;
@@ -66,6 +77,7 @@ void FixedWallBoundary::apply(Fields &field) {
             } else if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::TOP)) { // borders in TOP and LEFT position
+                        //std::cout << "Top Left" << std::endl;
 
                 field.u(i, j) = -field.u(i, j + 1);
                 field.v(i, j) = 0;
@@ -77,6 +89,7 @@ void FixedWallBoundary::apply(Fields &field) {
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||
                        (cell_borders[0] == border_position::RIGHT &&
                         cell_borders[1] == border_position::BOTTOM)) { // borders in BOTTOM and RIGHT position
+                        //std::cout << "Bottom Right" << std::endl;
 
                 field.u(i, j) = 0;
                 field.v(i, j) = -field.v(i + 1, j);
@@ -88,6 +101,7 @@ void FixedWallBoundary::apply(Fields &field) {
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::BOTTOM)) { // borders in BOTTOM and LEFT position
+                        //std::cout << "Bottom Left" << std::endl;
 
                 field.u(i, j) = -field.u(i, j - 1);
                 field.v(i, j) = -field.v(i - 1, j);
@@ -99,6 +113,23 @@ void FixedWallBoundary::apply(Fields &field) {
             }
         }
     }
+
+
+    // std::cout << "---------------------- u field ------------------------------" << std::endl;
+    //  for (int jx = 0; jx < 22; jx++ ){
+    //              for (int ix = 0; ix < 102; ix++) {
+    //                  std::cout << field.u(ix, jx) << " " ;
+    //                 }
+    //             std::cout << "\n";
+    //          }
+
+    // std::cout << "---------------------- v field ------------------------------" << std::endl;
+    //  for (int jx = 0; jx < 22; jx++ ){
+    //              for (int ix = 0; ix < 102; ix++) {
+    //                  std::cout << field.v(ix, jx) << " " ;
+    //                 }
+    //             std::cout << "\n";
+    //          }
 }
 
 MovingWallBoundary::MovingWallBoundary(std::vector<Cell *> cells, double wall_velocity) : _cells(cells) {
@@ -182,24 +213,24 @@ void InFlowBoundary::apply(Fields &field) {
 
             if (cell_borders[0] == border_position::TOP) { // border is in TOP position
                 field.u(i, j) = -field.u(i, j + 1);
-                field.v(i, j) = _inflow_velocity[id];
+                field.v(i, j) = 1;
                 field.p(i, j) = field.p(i, j + 1);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::BOTTOM) { // border is in BOTTOM position
                 field.u(i, j) = -field.u(i, j - 1);
-                field.v(i, j - 1) = -_inflow_velocity[id];
+                field.v(i, j - 1) = -1;
                 field.p(i, j) = field.p(i, j - 1);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::LEFT) { // border is in LEFT position
-                field.u(i - 1, j) = -_inflow_velocity[id];
+                field.u(i - 1, j) = -1;
                 field.v(i, j) = -field.v(i - 1, j);
                 field.p(i, j) = field.p(i - 1, j);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::RIGHT) { // border is in RIGHT position
-                field.u(i, j) = _inflow_velocity[id];
+                field.u(i, j) = 1;
                 field.v(i, j) = -field.v(i + 1, j);
                 field.p(i, j) = field.p(i + 1, j);
                 field.f(i, j) = field.u(i, j);
@@ -246,31 +277,41 @@ void OutFlowBoundary::apply(Fields &field) {
         if (cell_borders.size() == 1) {
 
             if (cell_borders[0] == border_position::TOP) { // border is in TOP position
-                field.u(i, j) = -field.u(i, j + 1);
-                field.v(i, j) = -_outflow_velocity[id];
-                field.p(i, j) = field.p(i, j + 1);
+                field.u(i, j) = field.u(i, j + 1);
+                field.v(i, j) = field.v(i,j+1);
+                field.p(i, j) = 0;  // TODO remove hard coded value
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::BOTTOM) { // border is in BOTTOM position
-                field.u(i, j) = -field.u(i, j - 1);
-                field.v(i, j - 1) = _outflow_velocity[id];
-                field.p(i, j) = field.p(i, j - 1);
+                field.u(i, j) = field.u(i, j - 1);
+                field.v(i, j) = field.v(i,j-1);
+                field.p(i, j) = 0; // TODO remove hard coded value
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::LEFT) { // border is in LEFT position
-                field.u(i - 1, j) = _outflow_velocity[id];
-                field.v(i, j) = -field.v(i - 1, j);
-                field.p(i, j) = field.p(i - 1, j);
+                //std::cout << "Applying Outflow" << std::endl;
+                field.u(i, j) = field.u(i - 1, j);
+                field.v(i, j) = field.v(i - 1, j);
+                field.p(i, j) = 0.0;
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::RIGHT) { // border is in RIGHT position
-                field.u(i, j) = -_outflow_velocity[id];
-                field.v(i, j) = -field.v(i + 1, j);
-                field.p(i, j) = field.p(i + 1, j);
+                field.u(i, j) = field.u(i+1,j);
+                field.v(i, j) = field.v(i + 1, j);
+                field.p(i, j) = 0;
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             }
         }
+
+            //  for (int jx = 0; jx < 22; jx++ ){
+            //      for (int ix = 0; ix < 102; ix++) {
+            //          std::cout << field.u(ix, jx) << " " ;
+            //         }
+            //     std::cout << "\n";
+            //  }
+
+
 
         /* NOT NEEDED YET, TODO LATER
 

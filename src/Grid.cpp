@@ -273,7 +273,7 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
     //      for (int j = 0; j < numcols; j++ ){
 
     //       for (int i = 0; i < numrows; i++) {
-    //           std::cout << geometry_data[i][j] << " " ;
+    //           std::cout << geometry_data[j][i] << " " ;
     //        }
     //        std::cout << "\n";
     //    }

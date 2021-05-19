@@ -25,16 +25,23 @@ Fields::Fields(double nu, double dt, double tau, std::vector<Cell *> cells, int 
             p(i, j) = PI;
         }
     }
+        // for (int jx = 0; jx < jmax + 2; jx++ ){
+
+        //     for (int ix = 0; ix < imax + 2; ix++) {
+        //         std::cout << _P(ix, jx) << " " ;
+        //     }
+        //     std::cout << "\n";
+        //  }
 }
 
 void Fields::calculate_fluxes(Grid &grid) {
     for (int j = 1; j <= grid.jmax(); j++) {
-        for (int i = 1; i <= (grid.imax() - 1); i++) {
+        for (int i = 1; i <= (grid.imax()); i++) {
             f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) -
                                        Discretization::convection_u(_U, _V, i, j) + _gx);
         }
     }
-    for (int j = 1; j <= (grid.jmax() - 1); j++) {
+    for (int j = 1; j <= (grid.jmax() ); j++) {
         for (int i = 1; i <= grid.imax(); i++) {
             g(i, j) = v(i, j) + _dt * (_nu * Discretization::diffusion(_V, i, j) -
                                        Discretization::convection_v(_U, _V, i, j) + _gy);
@@ -53,11 +60,11 @@ void Fields::calculate_rs(Grid &grid) {
 
 void Fields::calculate_velocities(Grid &grid) {
     for (int j = 1; j <= (grid.jmax()); j++) {
-        for (int i = 1; i <= (grid.imax() - 1); i++) {
+        for (int i = 1; i <= (grid.imax()); i++) {
             u(i, j) = f(i, j) - _dt / grid.dx() * (p(i + 1, j) - p(i, j));
         }
     }
-    for (int j = 1; j <= (grid.jmax() - 1); j++) {
+    for (int j = 1; j <= (grid.jmax() ); j++) {
         for (int i = 1; i <= (grid.imax()); i++) {
             v(i, j) = g(i, j) - _dt / grid.dy() * (p(i, j + 1) - p(i, j));
         }
