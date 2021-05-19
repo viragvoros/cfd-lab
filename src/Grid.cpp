@@ -15,10 +15,11 @@ Grid::Grid(std::string geom_name, Domain &domain) {
     _cells = Matrix<Cell>(_domain.size_x + 2, _domain.size_y + 2);
 
     if (geom_name.compare("NONE")) {
-        std::vector<std::vector<int>> geometry_data(_domain.domain_size_x + 2,
+        std::vector<std::vector<int>> geom_data(_domain.domain_size_x + 2,
                                                     std::vector<int>(_domain.domain_size_y + 2, 0));
-        parse_geometry_file(geom_name, geometry_data);
-        assign_cell_types(geometry_data);
+        parse_geometry_file(geom_name, geom_data);
+        assign_cell_types(geom_data);
+        geometry_data = geom_data;
     } else {
         build_lid_driven_cavity();
     }
@@ -294,6 +295,8 @@ double Grid::dx() const { return _domain.dx; }
 double Grid::dy() const { return _domain.dy; }
 
 const Domain &Grid::domain() const { return _domain; }
+
+const std::vector<std::vector<int>> &Grid::get_geometry_data() const { return geometry_data; }
 
 const std::vector<Cell *> &Grid::fluid_cells() const { return _fluid_cells; }
 

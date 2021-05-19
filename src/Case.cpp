@@ -344,7 +344,7 @@ void Case::output_vtk(int file_number) {
         { x += dx; }
         for (int row = 0; row < _grid.domain().size_x + 1; row++) {
 
-            //if(_grid.geometry_data.at(x).at(y)==0){
+            //if(_grid.get_geometry_data().at(x).at(y) == 0){ // maybe TODO .vtk does not work with this 
                 points->InsertNextPoint(x, y, z);
             //}
             
