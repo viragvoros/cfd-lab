@@ -20,10 +20,10 @@ void FixedWallBoundary::apply(Fields &field) {
 
         if (cell_borders.empty()){
             field.u(i, j) = 0;
-                field.v(i, j) = 0;
-                field.p(i, j) = 0;
-                field.f(i, j) = 0;
-                field.g(i, j) = 0;
+            field.v(i, j) = 0;
+            field.p(i, j) = 0;
+            field.f(i, j) = 0;
+            field.g(i, j) = 0;
         }
 
         if (cell_borders.size() == 1) { // One  neighbour
@@ -37,6 +37,7 @@ void FixedWallBoundary::apply(Fields &field) {
             } else if (cell_borders[0] ==
                        border_position::BOTTOM) { // border is in BOTTOM position (fluid cell under ghost cell)
                 field.u(i, j) = -field.u(i, j - 1);
+                field.v(i,j) = 0;
                 field.v(i, j - 1) = 0;
                 field.p(i, j) = field.p(i, j - 1);
                 field.f(i, j) = field.u(i, j);
@@ -44,6 +45,7 @@ void FixedWallBoundary::apply(Fields &field) {
             } else if (cell_borders[0] ==
                        border_position::LEFT) { // border is in LEFT position (fluid cell is left from ghost cell)
                 field.u(i - 1, j) = 0;
+                field.u(i, j) = 0;
                 field.v(i, j) = -field.v(i - 1, j);
                 field.p(i, j) = field.p(i - 1, j);
                 field.f(i - 1, j) = field.u(i - 1, j);
@@ -59,8 +61,6 @@ void FixedWallBoundary::apply(Fields &field) {
         }
 
         else if (cell_borders.size() == 2) {
-
-            
 
             if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::RIGHT) ||
                 (cell_borders[0] == border_position::RIGHT &&
@@ -84,7 +84,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.u(i - 1, j) = 0;
                 field.v(i, j - 1) = -field.v(i - 1, j - 1);
                 field.p(i, j) = 0.5 * (field.p(i - 1, j) + field.p(i, j + 1));
-                field.f(i, j) = field.u(i, j);
+                field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j) = field.v(i, j);
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||
                        (cell_borders[0] == border_position::RIGHT &&
@@ -97,7 +97,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.v(i, j - 1) = 0;
                 field.p(i, j) = 0.5 * (field.p(i + 1, j) + field.p(i, j - 1));
                 field.f(i, j) = field.u(i, j);
-                field.g(i, j) = field.v(i, j);
+                field.g(i, j - 1) = field.v(i, j - 1);
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::BOTTOM)) { // borders in BOTTOM and LEFT position
@@ -108,28 +108,29 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.u(i - 1, j) = 0;
                 field.v(i, j - 1) = 0;
                 field.p(i, j) = 0.5 * (field.p(i - 1, j) + field.p(i, j - 1));
-                field.f(i, j) = field.u(i, j);
-                field.g(i, j) = field.v(i, j);
+                field.f(i - 1, j) = field.u(i - 1, j);
+                field.g(i, j - 1) = field.v(i, j - 1);
             }
         }
     }
 
+    // ----------- For debugging: Printing velocity fields to console 
+    
+        // std::cout << "---------------------- u field ------------------------------" << std::endl;
+        //  for (int jx = 0; jx < 22; jx++ ){
+        //              for (int ix = 0; ix < 102; ix++) {
+        //                  std::cout << field.u(ix, jx) << " " ;
+        //                 }
+        //             std::cout << "\n";
+        //          }
 
-    // std::cout << "---------------------- u field ------------------------------" << std::endl;
-    //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 102; ix++) {
-    //                  std::cout << field.u(ix, jx) << " " ;
-    //                 }
-    //             std::cout << "\n";
-    //          }
-
-    // std::cout << "---------------------- v field ------------------------------" << std::endl;
-    //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 102; ix++) {
-    //                  std::cout << field.v(ix, jx) << " " ;
-    //                 }
-    //             std::cout << "\n";
-    //          }
+        // std::cout << "---------------------- v field ------------------------------" << std::endl;
+        //  for (int jx = 0; jx < 22; jx++ ){
+        //              for (int ix = 0; ix < 102; ix++) {
+        //                  std::cout << field.v(ix, jx) << " " ;
+        //                 }
+        //             std::cout << "\n";
+        //          }
 }
 
 MovingWallBoundary::MovingWallBoundary(std::vector<Cell *> cells, double wall_velocity) : _cells(cells) {

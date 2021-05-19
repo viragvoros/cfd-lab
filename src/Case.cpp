@@ -290,7 +290,7 @@ void Case::simulate() {
 
     //     std::cout << "---------------------- u field ------------------------------" << std::endl;
     //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 102; ix++) {
+    //              for (int ix = 0; ix < 73; ix++) {
     //                  std::cout << _field.u(ix, jx) << " " ;
     //                 }
     //             std::cout << "\n";
@@ -298,20 +298,23 @@ void Case::simulate() {
 
     // std::cout << "---------------------- v field ------------------------------" << std::endl;
     //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 102; ix++) {
+    //              for (int ix = 0; ix < 73; ix++) {
     //                  std::cout << _field.v(ix, jx) << " " ;
     //                 }
     //             std::cout << "\n";
     //          }
 
-        t = t + dt;
+    //     t = t + dt;
         output_counter++;
 
        
 
-        if (output_counter == 10 || output_counter % 100 == 0) {
+        if (output_counter < 20 || output_counter % 200 == 0) {
+
             output_vtk(output_counter);
         }
+
+          
 
     //     // Additional application of boundary conditions as mentioned in tutorial.
     // for (auto &boundary : _boundaries) {
