@@ -41,7 +41,7 @@ dt_value     5.0
 # omg: relaxation factor for SOR
 # gamma: upwind differencing factor
 #--------------------------------------------
-itermax      500
+itermax      2000
 eps          0.001
 omg          1.7
 gamma        0.5
@@ -65,7 +65,7 @@ PI          0
 #--------------------------------------------
 #       initial velocity
 #--------------------------------------------
-UI          0
+UI          1.0
 VI          0
 
 #--------------------------------------------

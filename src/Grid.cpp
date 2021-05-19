@@ -76,11 +76,11 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
                 _cells(i, j) = Cell(i, j, cell_type::WALL_6, geometry_data.at(i_geom).at(j_geom));
                 _fixed_wall_cells_6.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 1) {
-                _cells(i, j) = Cell(i, j, cell_type::INFLOW);
+                _cells(i, j) = Cell(i, j, cell_type::INFLOW, geometry_data.at(i_geom).at(j_geom));
                 _inflow_cells.push_back(&_cells(i, j));
             } else {
                 if (geometry_data.at(i_geom).at(j_geom) == 2) {
-                    _cells(i, j) = Cell(i, j, cell_type::OUTFLOW);
+                    _cells(i, j) = Cell(i, j, cell_type::OUTFLOW, geometry_data.at(i_geom).at(j_geom));
                     _outflow_cells.push_back(&_cells(i, j));
                 }
             }

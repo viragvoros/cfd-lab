@@ -138,7 +138,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     _field = Fields(nu, dt, tau, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
-    _pressure_solver = std::make_unique<SOR>(omg); // Ask: What does that do?
+    _pressure_solver = std::make_unique<SOR>(omg); 
     _max_iter = itermax;
     _tolerance = eps;
 
@@ -149,7 +149,6 @@ Case::Case(std::string file_name, int argn, char **args) {
             std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
-        std::cout << "Hello3"<< std::endl;
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3()));
     }
     if (not _grid.fixed_wall_cells_4().empty()) {
@@ -164,11 +163,9 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     */
     if (not _grid.inflow_cells().empty()) {
-        std::cout << "Hello inflow"<< std::endl;
-        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN));
+        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN));
     }
     if (not _grid.outflow_cells().empty()) {
-        std::cout << "Hello outflow"<< std::endl;
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), UIN, TIN));
     }
 
@@ -267,7 +264,7 @@ void Case::simulate() {
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance) {
-                std::cout << res << std::endl;
+                //std::cout << res << std::endl;
                 break;
             }
             nb_iter++;
@@ -281,36 +278,34 @@ void Case::simulate() {
 
         _field.calculate_velocities(_grid);
 
+        
+    // --------------DEBUG: Printig fields to console ----------------
+
+        //     std::cout << "---------------------- u field ------------------------------" << std::endl;
         //  for (int jx = 0; jx < 22; jx++ ){
-        //          for (int ix = 0; ix < 102; ix++) {
-        //              std::cout << _field.u(ix, jx) << " " ;
-        //             }
-        //         std::cout << "\n";
-        //      }
+        //              for (int ix = 0; ix < 73; ix++) {
+        //                  std::cout << _field.u(ix, jx) << " " ;
+        //                 }
+        //             std::cout << "\n";
+        //          }
 
-    //     std::cout << "---------------------- u field ------------------------------" << std::endl;
-    //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 73; ix++) {
-    //                  std::cout << _field.u(ix, jx) << " " ;
-    //                 }
-    //             std::cout << "\n";
-    //          }
+        // std::cout << "---------------------- v field ------------------------------" << std::endl;
+        //  for (int jx = 0; jx < 22; jx++ ){
+        //              for (int ix = 0; ix < 73; ix++) {
+        //                  std::cout << _field.v(ix, jx) << " " ;
+        //                 }
+        //             std::cout << "\n";
+        //          }
 
-    // std::cout << "---------------------- v field ------------------------------" << std::endl;
-    //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 73; ix++) {
-    //                  std::cout << _field.v(ix, jx) << " " ;
-    //                 }
-    //             std::cout << "\n";
-    //          }
-
-    //     t = t + dt;
         output_counter++;
 
        
 
         if (output_counter < 20 || output_counter % 200 == 0) {
-
+            for (auto &boundary : _boundaries) {
+            boundary->apply(_field);
+            //std::cout << "Entering apply boundaries" << std::endl;
+            }
             output_vtk(output_counter);
         }
 
@@ -348,7 +343,11 @@ void Case::output_vtk(int file_number) {
         x = _grid.domain().imin * dx;
         { x += dx; }
         for (int row = 0; row < _grid.domain().size_x + 1; row++) {
-            points->InsertNextPoint(x, y, z);
+
+            //if(_grid.geometry_data.at(x).at(y)==0){
+                points->InsertNextPoint(x, y, z);
+            //}
+            
             x += dx;
         }
         y += dy;

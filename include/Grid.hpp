@@ -51,6 +51,12 @@ class Grid {
     /// access cell size in y-direction
     double dy() const;
 
+      /**
+     * @brief Access to geometry data
+     *
+     */
+    //std::vector<std::vector<int>> get_geometry_data();
+
     /**
      * @brief Access inflow cells
      *
