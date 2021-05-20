@@ -25,7 +25,7 @@ class Fields {
      * @param[in] initial pressure
      *
      */
-    Fields(double _nu, double _dt, double _tau, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI);
+    Fields(double _nu, double _dt, double _tau, double _alpha, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
@@ -54,6 +54,14 @@ class Fields {
     void calculate_velocities(Grid &grid);
 
     /**
+     * @brief Temperature calculation based on explicit discretization of the heat equation
+     *
+     * @param[in] grid in which the calculations are done
+     *
+     */
+    void calculate_temperature(Grid &grid);
+
+    /**
      * @brief Adaptive step size calculation using x-velocity condition,
      * y-velocity condition and CFL condition
      *
@@ -61,6 +69,15 @@ class Fields {
      *
      */
     double calculate_dt(Grid &grid);
+
+    /**
+     * @brief Adaptive step size calculation using x-velocity condition,
+     * y-velocity condition, CFL condition and heat equation
+     *
+     * @param[in] grid in which the calculations are done
+     *
+     */
+    double calculate_dt_temp(Grid &grid);
     double find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb);
 
     /// x-velocity index based access and modify
@@ -81,6 +98,9 @@ class Fields {
     /// y-momentum flux index based access and modify
     double &g(int i, int j);
 
+    /// temperature index based access and modify
+    double &t(int i, int j);
+
     /// get timestep size
     double dt() const;
 
@@ -100,6 +120,8 @@ class Fields {
     Matrix<double> _G;
     /// right hand side matrix
     Matrix<double> _RS;
+    /// temperature matrix
+    Matrix<double> _T;
 
     /// kinematic viscosity
     double _nu;
@@ -111,6 +133,8 @@ class Fields {
     double _dt;
     /// adaptive timestep coefficient
     double _tau;
+    /// thermal diffusivity
+    double _alpha;
     /// fluid cells
     std::vector<Cell *> _cells;
 };

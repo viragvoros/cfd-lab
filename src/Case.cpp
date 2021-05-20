@@ -44,7 +44,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     double UIN;            /* inlet velocity x-direction */
     double VIN;            /* inlet velocity y-direction */
     int num_of_walls;      /* number of walls */
-    std::string energy_eq; /* heat energy on */
     double TI;             /* initial temperature */
     double TIN;            /* inlet temperature */
     double beta;           /* thermal expansion coefficient */
@@ -88,7 +87,7 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "UIN") file >> UIN;
                 if (var == "VIN") file >> VIN;
                 if (var == "num_of_walls") file >> num_of_walls;
-                if (var == "energy_eq") file >> energy_eq;
+                if (var == "energy_eq") file >> _energy_eq;
                 if (var == "TI") file >> TI;
                 if (var == "TIN") file >> TIN;
                 if (var == "beta") file >> beta;
@@ -135,7 +134,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI);
+    _field = Fields(nu, dt, tau, alpha, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg); // Ask: What does that do?
@@ -252,7 +251,12 @@ void Case::simulate() {
 
     while (t <= _t_end) {
         // Calculate optimum timestep
-        dt = _field.calculate_dt(_grid);
+        if (_energy_eq.compare("on")) {
+            dt = _field.calculate_dt_temp(_grid);
+        }
+        else {
+            dt = _field.calculate_dt(_grid);
+        }
         std::cout << dt << std::endl;
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
@@ -260,6 +264,9 @@ void Case::simulate() {
             //std::cout << "Entering apply boundaries" << std::endl;
         }
 
+        if (_energy_eq.compare("on")) {
+            _field.calculate_temperature(_grid);
+        }
         _field.calculate_fluxes(_grid);
         _field.calculate_rs(_grid);
 
