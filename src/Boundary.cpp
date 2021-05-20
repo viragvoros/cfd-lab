@@ -252,19 +252,19 @@ void InFlowBoundary::apply(Fields &field) {
     }
 }
 
-OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity) : _cells(cells) {
-    _outflow_velocity.insert(std::pair(boundary_ids::outflow_cell_id, outflow_velocity));
+OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, double outflow_pressure) : _cells(cells) {
+    _outflow_pressure.insert(std::pair(boundary_ids::outflow_cell_id, outflow_pressure));
 }
 
-OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, double outflow_velocity, double outflow_temperature)
+OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, double outflow_pressure, double outflow_temperature)
     : _cells(cells) {
-    _outflow_velocity.insert(std::pair(boundary_ids::outflow_cell_id, outflow_velocity));
+    _outflow_pressure.insert(std::pair(boundary_ids::outflow_cell_id, outflow_pressure));
     _outflow_temperature.insert(std::pair(boundary_ids::outflow_cell_id, outflow_temperature));
 }
 
-OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, std::map<int, double> outflow_velocity,
+OutFlowBoundary::OutFlowBoundary(std::vector<Cell *> cells, std::map<int, double> outflow_pressure,
                                  std::map<int, double> outflow_temperature)
-    : _cells(cells), _outflow_velocity(outflow_velocity), _outflow_temperature(outflow_temperature) {}
+    : _cells(cells), _outflow_pressure(outflow_pressure), _outflow_temperature(outflow_temperature) {}
 
 void OutFlowBoundary::apply(Fields &field) {
     for (const auto cell : _cells) {
@@ -278,25 +278,25 @@ void OutFlowBoundary::apply(Fields &field) {
             if (cell_borders[0] == border_position::TOP) { // border is in TOP position
                 field.u(i, j) = field.u(i, j + 1);
                 field.v(i, j) = field.v(i,j+1);
-                field.p(i, j) = 0;  // TODO remove hard coded value
+                field.p(i, j) = _outflow_pressure[id]; 
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::BOTTOM) { // border is in BOTTOM position
                 field.u(i, j) = field.u(i, j - 1);
                 field.v(i, j) = field.v(i,j-1);
-                field.p(i, j) = 0; // TODO remove hard coded value
+                field.p(i, j) = _outflow_pressure[id];
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::LEFT) { // border is in LEFT position
                 field.u(i, j) = field.u(i - 1, j);
                 field.v(i, j) = field.v(i - 1, j);
-                field.p(i, j) = 0.0;
+                field.p(i, j) = _outflow_pressure[id];
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             } else if (cell_borders[0] == border_position::RIGHT) { // border is in RIGHT position
                 field.u(i, j) = field.u(i+1,j);
                 field.v(i, j) = field.v(i + 1, j);
-                field.p(i, j) = 0;
+                field.p(i, j) = _outflow_pressure[id];
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
             }
