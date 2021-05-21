@@ -48,7 +48,7 @@ class Case {
     /// Relative input file path
     std::string _prefix;
     /// Heat energy on
-    std::string _energy_eq{"NONE"};
+    std::string energy_eq{"NONE"};
 
     /// Simulation time
     double _t_end;

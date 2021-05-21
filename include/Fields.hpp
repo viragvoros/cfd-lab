@@ -25,7 +25,7 @@ class Fields {
      * @param[in] initial pressure
      *
      */
-    Fields(double _nu, double _dt, double _tau, double _alpha, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI);
+    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, std::string _energy_eq);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
@@ -70,14 +70,6 @@ class Fields {
      */
     double calculate_dt(Grid &grid);
 
-    /**
-     * @brief Adaptive step size calculation using x-velocity condition,
-     * y-velocity condition, CFL condition and heat equation
-     *
-     * @param[in] grid in which the calculations are done
-     *
-     */
-    double calculate_dt_temp(Grid &grid);
     double find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb);
 
     /// x-velocity index based access and modify
@@ -135,6 +127,10 @@ class Fields {
     double _tau;
     /// thermal diffusivity
     double _alpha;
+    /// thermal expansion coefficient
+    double _beta;
     /// fluid cells
     std::vector<Cell *> _cells;
+    /// Heat energy on
+    std::string _energy_eq{"NONE"};
 };

@@ -87,7 +87,7 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "UIN") file >> UIN;
                 if (var == "VIN") file >> VIN;
                 if (var == "num_of_walls") file >> num_of_walls;
-                if (var == "energy_eq") file >> _energy_eq;
+                if (var == "energy_eq") file >> energy_eq;
                 if (var == "TI") file >> TI;
                 if (var == "TIN") file >> TIN;
                 if (var == "beta") file >> beta;
@@ -134,7 +134,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI);
+    _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI, energy_eq);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg); 
@@ -248,22 +248,17 @@ void Case::simulate() {
 
     while (t <= _t_end) {
         // Calculate optimum timestep
-        if (_energy_eq.compare("on")) {
-            dt = _field.calculate_dt_temp(_grid);
-        }
-        else {
-            dt = _field.calculate_dt(_grid);
-        }
+        dt = _field.calculate_dt(_grid);
+
         std::cout << dt << std::endl;
+        std::cout << energy_eq << std::endl;
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
             //std::cout << "Entering apply boundaries" << std::endl;
         }
 
-        if (_energy_eq.compare("on")) {
-            _field.calculate_temperature(_grid);
-        }
+        _field.calculate_temperature(_grid);
         _field.calculate_fluxes(_grid);
         _field.calculate_rs(_grid);
 
@@ -305,8 +300,7 @@ void Case::simulate() {
         //          }
 
         output_counter++;
-
-       
+        t = t + dt;
 
         if (output_counter < 20 || output_counter % 200 == 0) {
             for (auto &boundary : _boundaries) {
