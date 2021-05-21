@@ -48,12 +48,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     double TIN;            /* inlet temperature */
     double beta;           /* thermal expansion coefficient */
     double alpha;          /* thermal diffusivity */
-    double wall_temp_3;    /* wall (id 3) temperature */
-    double wall_temp_4;    /* wall (id 4) temperature */
-    double wall_temp_5;    /* wall (id 5) temperature */
-    double wall_vel_3;     /* wall (id 3) velocity */
-    double wall_vel_4;     /* wall (id 4) velocity */
-    double wall_vel_5;     /* wall (id 5) velocity */
 
     if (file.is_open()) {
 
@@ -394,8 +388,24 @@ void Case::output_vtk(int file_number) {
                 double pressure = 0;
                 Pressure->InsertNextTuple(&pressure);
 
-                double temperature = 0;
-                Temperature->InsertNextTuple(&temperature);
+                if(_grid.get_geometry_data().at(i).at(j) == 3) {
+                    double temperature = wall_temp_3;
+                    Temperature->InsertNextTuple(&temperature);
+                }
+                else if(_grid.get_geometry_data().at(i).at(j) == 4) {
+                    double temperature = wall_temp_4;
+                    Temperature->InsertNextTuple(&temperature);
+                }
+                else if(_grid.get_geometry_data().at(i).at(j) == 5) {
+                    double temperature = wall_temp_5;
+                    Temperature->InsertNextTuple(&temperature);
+                }
+                else{
+                    // TODO ID 7/8/9 how to be represented?
+                    double temperature = 0;
+                    Temperature->InsertNextTuple(&temperature);
+                }
+
             }
         }
     }
