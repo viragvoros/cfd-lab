@@ -70,7 +70,7 @@ class InFlowBoundary : public Boundary {
     InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity);
     InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature);
     InFlowBoundary(std::vector<Cell *> cells, std::map<int, double> inflow_velocity,
-                       std::map<int, double> inflow_temperature);
+                   std::map<int, double> inflow_temperature);
     virtual ~InFlowBoundary() = default;
     virtual void apply(Fields &field);
 

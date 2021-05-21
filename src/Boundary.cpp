@@ -19,7 +19,7 @@ void FixedWallBoundary::apply(Fields &field) {
         int j = cell->j();
         int id = cell->wall_id();
 
-        if (cell_borders.empty()){ // set all values of cells without a fluid neighbour to 0
+        if (cell_borders.empty()) { // set all values of cells without a fluid neighbour to 0
             field.u(i, j) = 0;
             field.v(i, j) = 0;
             field.p(i, j) = 0;
@@ -36,20 +36,20 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i,j+1);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j + 1);
                 }
             } else if (cell_borders[0] ==
                        border_position::BOTTOM) { // border is in BOTTOM position (fluid cell under ghost cell)
                 field.u(i, j) = -field.u(i, j - 1);
-                field.v(i,j) = 0;
+                field.v(i, j) = 0;
                 field.v(i, j - 1) = 0;
                 field.p(i, j) = field.p(i, j - 1);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i,j-1);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j - 1);
                 }
             } else if (cell_borders[0] ==
                        border_position::LEFT) { // border is in LEFT position (fluid cell is left from ghost cell)
@@ -60,8 +60,8 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i-1,j);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i - 1, j);
                 }
             } else if (cell_borders[0] ==
                        border_position::RIGHT) { // border is in RIGHT position (fluid cell is right from ghost cell)
@@ -71,8 +71,8 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i+1,j);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i + 1, j);
                 }
             }
         }
@@ -91,13 +91,13 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i,j+1) + field.t(i+1,j));
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i + 1, j));
                 }
             } else if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::TOP)) { // borders in TOP and LEFT position
-                        //std::cout << "Top Left" << std::endl;
+                                                                    // std::cout << "Top Left" << std::endl;
 
                 field.u(i, j) = -field.u(i, j + 1);
                 field.v(i, j) = 0;
@@ -107,8 +107,8 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i,j+1) + field.t(i-1,j));
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i - 1, j));
                 }
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||
                        (cell_borders[0] == border_position::RIGHT &&
@@ -122,8 +122,8 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i,j-1) + field.t(i+1,j));
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i + 1, j));
                 }
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
@@ -137,30 +137,30 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i,j-1) + field.t(i-1,j));
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i - 1, j));
                 }
             }
         }
     }
 
-    // ----------- For debugging: Printing velocity fields to console 
+    // ----------- For debugging: Printing velocity fields to console
 
-        // std::cout << "---------------------- u field ------------------------------" << std::endl;
-        //  for (int jx = 0; jx < 22; jx++ ){
-        //              for (int ix = 0; ix < 102; ix++) {
-        //                  std::cout << field.u(ix, jx) << " " ;
-        //                 }
-        //             std::cout << "\n";
-        //          }
+    // std::cout << "---------------------- u field ------------------------------" << std::endl;
+    //  for (int jx = 0; jx < 22; jx++ ){
+    //              for (int ix = 0; ix < 102; ix++) {
+    //                  std::cout << field.u(ix, jx) << " " ;
+    //                 }
+    //             std::cout << "\n";
+    //          }
 
-        // std::cout << "---------------------- v field ------------------------------" << std::endl;
-        //  for (int jx = 0; jx < 22; jx++ ){
-        //              for (int ix = 0; ix < 102; ix++) {
-        //                  std::cout << field.v(ix, jx) << " " ;
-        //                 }
-        //             std::cout << "\n";
-        //          }
+    // std::cout << "---------------------- v field ------------------------------" << std::endl;
+    //  for (int jx = 0; jx < 22; jx++ ){
+    //              for (int ix = 0; ix < 102; ix++) {
+    //                  std::cout << field.v(ix, jx) << " " ;
+    //                 }
+    //             std::cout << "\n";
+    //          }
 }
 
 MovingWallBoundary::MovingWallBoundary(std::vector<Cell *> cells, double wall_velocity) : _cells(cells) {
@@ -187,8 +187,8 @@ void MovingWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i,j+1);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j + 1);
                 }
             } else if (cell_borders[0] ==
                        border_position::BOTTOM) { // border is in BOTTOM position (fluid cell under ghost cell)
@@ -198,8 +198,8 @@ void MovingWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i,j-1);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j - 1);
                 }
             } else if (cell_borders[0] ==
                        border_position::LEFT) { // border is in LEFT position (fluid cell left from ghost cell)
@@ -209,8 +209,8 @@ void MovingWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i-1,j);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i - 1, j);
                 }
             } else if (cell_borders[0] ==
                        border_position::RIGHT) { // border is in RIGHT position (fluid cell right from ghost cell)
@@ -220,8 +220,8 @@ void MovingWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _wall_temperature.empty()) {
-                    field.t(i,j) = 2 * _wall_temperature[id] - field.t(i+1,j);
+                if (!_wall_temperature.empty()) {
+                    field.t(i, j) = 2 * _wall_temperature[id] - field.t(i + 1, j);
                 }
             }
         }
@@ -264,8 +264,8 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _inflow_temperature.empty()) {
-                    field.t(i,j) = 2 * _inflow_temperature[id] - field.t(i,j+1);
+                if (!_inflow_temperature.empty()) {
+                    field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i, j + 1);
                 }
             } else if (cell_borders[0] == border_position::BOTTOM) { // border is in BOTTOM position
                 field.u(i, j) = -field.u(i, j - 1);
@@ -274,8 +274,8 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _inflow_temperature.empty()) {
-                    field.t(i,j) = 2 * _inflow_temperature[id] - field.t(i,j-1);
+                if (!_inflow_temperature.empty()) {
+                    field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i, j - 1);
                 }
             } else if (cell_borders[0] == border_position::LEFT) { // border is in LEFT position
                 field.u(i - 1, j) = -1;
@@ -284,19 +284,19 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _inflow_temperature.empty()) {
-                    field.t(i,j) = 2 * _inflow_temperature[id] - field.t(i-1,j);
+                if (!_inflow_temperature.empty()) {
+                    field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i - 1, j);
                 }
             } else if (cell_borders[0] == border_position::RIGHT) { // border is in RIGHT position
                 field.u(i, j) = _inflow_velocity[id];
-                //std::cout << id << std::endl;
+                // std::cout << id << std::endl;
                 field.v(i, j) = -field.v(i + 1, j);
                 field.p(i, j) = field.p(i + 1, j);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (! _inflow_temperature.empty()) {
-                    field.t(i,j) = 2 * _inflow_temperature[id] - field.t(i+1,j);
+                if (!_inflow_temperature.empty()) {
+                    field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i + 1, j);
                 }
             }
         }
@@ -334,32 +334,32 @@ void OutFlowBoundary::apply(Fields &field) {
 
             if (cell_borders[0] == border_position::TOP) { // border is in TOP position
                 field.u(i, j) = field.u(i, j + 1);
-                field.v(i, j) = field.v(i,j+1);
-                field.p(i, j) = _outflow_pressure[id]; 
-                field.f(i, j) = field.u(i, j);
-                field.g(i, j) = field.v(i, j);
-                field.t(i,j) = field.t(i,j+1);
-            } else if (cell_borders[0] == border_position::BOTTOM) { // border is in BOTTOM position
-                field.u(i, j) = field.u(i, j - 1);
-                field.v(i, j) = field.v(i,j-1);
+                field.v(i, j) = field.v(i, j + 1);
                 field.p(i, j) = _outflow_pressure[id];
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
-                field.t(i,j) = field.t(i,j-1);
+                field.t(i, j) = field.t(i, j + 1);
+            } else if (cell_borders[0] == border_position::BOTTOM) { // border is in BOTTOM position
+                field.u(i, j) = field.u(i, j - 1);
+                field.v(i, j) = field.v(i, j - 1);
+                field.p(i, j) = _outflow_pressure[id];
+                field.f(i, j) = field.u(i, j);
+                field.g(i, j) = field.v(i, j);
+                field.t(i, j) = field.t(i, j - 1);
             } else if (cell_borders[0] == border_position::LEFT) { // border is in LEFT position
                 field.u(i, j) = field.u(i - 1, j);
                 field.v(i, j) = field.v(i - 1, j);
                 field.p(i, j) = _outflow_pressure[id];
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
-                field.t(i,j) = field.t(i-1,j);
+                field.t(i, j) = field.t(i - 1, j);
             } else if (cell_borders[0] == border_position::RIGHT) { // border is in RIGHT position
-                field.u(i, j) = field.u(i+1,j);
+                field.u(i, j) = field.u(i + 1, j);
                 field.v(i, j) = field.v(i + 1, j);
                 field.p(i, j) = _outflow_pressure[id];
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
-                field.t(i,j) = field.t(i+1,j);
+                field.t(i, j) = field.t(i + 1, j);
             }
         }
 

@@ -50,14 +50,14 @@ class Case {
     /// Heat energy on
     std::string energy_eq{"NONE"};
     /// Wall (id 3) temperature
-    double wall_temp_3;   
+    double wall_temp_3;
     /// Wall (id 4) temperature
-    double wall_temp_4; 
+    double wall_temp_4;
     /// Wall (id 5) temperature
     double wall_temp_5;
     /// Wall (id 3) velocity
     double wall_vel_3;
-    /// Wall (id 4) velocity   
+    /// Wall (id 4) velocity
     double wall_vel_4;
     /// Wall (id 5) velocity
     double wall_vel_5;

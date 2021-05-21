@@ -26,16 +26,16 @@ const int RIGHT = 3;
 
 enum class cell_type {
 
-    FLUID, //0
-    INFLOW, //1
-    OUTFLOW, //2
-    WALL_3, //3
-    WALL_4, //4
-    WALL_5, //5
-    WALL_6, //6
-    FREE_SLIP, //7
-    MOVING_WALL, //8
-    DEFAULT //9
+    FLUID,       // 0
+    INFLOW,      // 1
+    OUTFLOW,     // 2
+    WALL_3,      // 3
+    WALL_4,      // 4
+    WALL_5,      // 5
+    WALL_6,      // 6
+    FREE_SLIP,   // 7
+    MOVING_WALL, // 8
+    DEFAULT      // 9
 };
 
 namespace boundary_ids {
@@ -49,4 +49,4 @@ const int fixed_wall_cell_6_id = 6;
 const int free_slip_cell_id = 7;
 const int moving_wall_cell_id = 8;
 const int default_id = 9;
-}
+} // namespace boundary_ids

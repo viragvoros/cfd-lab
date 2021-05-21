@@ -41,13 +41,13 @@ Case::Case(std::string file_name, int argn, char **args) {
     double eps;     /* accuracy bound for pressure*/
     int iproc;
     int jproc;
-    double UIN;            /* inlet velocity x-direction */
-    double VIN;            /* inlet velocity y-direction */
-    int num_of_walls;      /* number of walls */
-    double TI;             /* initial temperature */
-    double TIN;            /* inlet temperature */
-    double beta;           /* thermal expansion coefficient */
-    double alpha;          /* thermal diffusivity */
+    double UIN;       /* inlet velocity x-direction */
+    double VIN;       /* inlet velocity y-direction */
+    int num_of_walls; /* number of walls */
+    double TI;        /* initial temperature */
+    double TIN;       /* inlet temperature */
+    double beta;      /* thermal expansion coefficient */
+    double alpha;     /* thermal diffusivity */
 
     if (file.is_open()) {
 
@@ -101,8 +101,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     std::map<int, double> wall_temp;
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
-    }
-    else {
+    } else {
         // IDEA: construct maps of ids and velocities/temperatures for constructors of boundaries
         wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
         wall_vel[boundary_ids::fixed_wall_cell_4_id] = wall_vel_4;
@@ -111,7 +110,6 @@ Case::Case(std::string file_name, int argn, char **args) {
         wall_temp[boundary_ids::fixed_wall_cell_4_id] = wall_temp_4;
         wall_temp[boundary_ids::fixed_wall_cell_5_id] = wall_temp_5;
     }
-
 
     // Set file names for geometry file and output directory
     set_file_names(file_name);
@@ -123,15 +121,14 @@ Case::Case(std::string file_name, int argn, char **args) {
     domain.domain_size_x = imax;
     domain.domain_size_y = jmax;
 
-    
-
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI, energy_eq);
+    _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
+                    PI, TI, energy_eq);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
-    _pressure_solver = std::make_unique<SOR>(omg); 
+    _pressure_solver = std::make_unique<SOR>(omg);
     _max_iter = itermax;
     _tolerance = eps;
 
@@ -139,16 +136,19 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
-            std::cout << _boundaries.size() << std::endl;
+        std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp[boundary_ids::fixed_wall_cell_3_id]));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(),
+                                                                  wall_temp[boundary_ids::fixed_wall_cell_3_id]));
     }
     if (not _grid.fixed_wall_cells_4().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(), wall_temp[boundary_ids::fixed_wall_cell_4_id]));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(),
+                                                                  wall_temp[boundary_ids::fixed_wall_cell_4_id]));
     }
     if (not _grid.fixed_wall_cells_5().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp[boundary_ids::fixed_wall_cell_5_id]));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(),
+                                                                  wall_temp[boundary_ids::fixed_wall_cell_5_id]));
     }
     /*
     if (not _grid.fixed_wall_cells_6().empty()) {
@@ -162,7 +162,7 @@ Case::Case(std::string file_name, int argn, char **args) {
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), PI));
     }
 
-    //std::cout << _boundaries.size() << std::endl; // is this supposed to be only 3? How is this organised?
+    // std::cout << _boundaries.size() << std::endl; // is this supposed to be only 3? How is this organised?
 }
 
 void Case::set_file_names(std::string file_name) {
@@ -249,7 +249,7 @@ void Case::simulate() {
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
-            //std::cout << "Entering apply boundaries" << std::endl;
+            // std::cout << "Entering apply boundaries" << std::endl;
         }
 
         _field.calculate_temperature(_grid);
@@ -260,13 +260,12 @@ void Case::simulate() {
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance) {
-                //std::cout << res << std::endl;
+                // std::cout << res << std::endl;
                 break;
             }
             nb_iter++;
-            
         }
-        
+
         if (nb_iter == _max_iter + 1) {
             std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\n"
                       << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
@@ -274,8 +273,7 @@ void Case::simulate() {
 
         _field.calculate_velocities(_grid);
 
-        
-    // --------------DEBUG: Printig fields to console ----------------
+        // --------------DEBUG: Printig fields to console ----------------
 
         //     std::cout << "---------------------- u field ------------------------------" << std::endl;
         //  for (int jx = 0; jx < 22; jx++ ){
@@ -298,23 +296,19 @@ void Case::simulate() {
 
         if (output_counter == 20 || output_counter % 100 == 0) {
             for (auto &boundary : _boundaries) {
-            boundary->apply(_field);
-            //std::cout << "Entering apply boundaries" << std::endl;
+                boundary->apply(_field);
+                // std::cout << "Entering apply boundaries" << std::endl;
             }
             output_vtk(output_counter);
         }
 
-          
-
-    //     // Additional application of boundary conditions as mentioned in tutorial.
-    // for (auto &boundary : _boundaries) {
-    //     boundary->apply(_field);
-    // }
+        //     // Additional application of boundary conditions as mentioned in tutorial.
+        // for (auto &boundary : _boundaries) {
+        //     boundary->apply(_field);
+        // }
     }
 
-
-     output_vtk(output_counter);
-    
+    output_vtk(output_counter);
 }
 
 void Case::output_vtk(int file_number) {
@@ -339,10 +333,10 @@ void Case::output_vtk(int file_number) {
         { x += dx; }
         for (int row = 0; row < _grid.domain().size_x + 1; row++) {
 
-            //if(_grid.get_geometry_data().at(x).at(y) == 0){ // maybe TODO .vtk does not work with this 
-                points->InsertNextPoint(x, y, z);
+            // if(_grid.get_geometry_data().at(x).at(y) == 0){ // maybe TODO .vtk does not work with this
+            points->InsertNextPoint(x, y, z);
             //}
-            
+
             x += dx;
         }
         y += dy;
@@ -376,36 +370,31 @@ void Case::output_vtk(int file_number) {
 
                 double temperature = _field.t(i, j);
                 Temperature->InsertNextTuple(&temperature);
-            }
-            else if(_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 || _grid.get_geometry_data().at(i).at(j) == 2) {
+            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
+                       _grid.get_geometry_data().at(i).at(j) == 2) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
 
                 double temperature = _field.t(i, j);
                 Temperature->InsertNextTuple(&temperature);
-            }
-            else {
+            } else {
                 double pressure = 0;
                 Pressure->InsertNextTuple(&pressure);
 
-                if(_grid.get_geometry_data().at(i).at(j) == 3) {
+                if (_grid.get_geometry_data().at(i).at(j) == 3) {
                     double temperature = wall_temp_3;
                     Temperature->InsertNextTuple(&temperature);
-                }
-                else if(_grid.get_geometry_data().at(i).at(j) == 4) {
+                } else if (_grid.get_geometry_data().at(i).at(j) == 4) {
                     double temperature = wall_temp_4;
                     Temperature->InsertNextTuple(&temperature);
-                }
-                else if(_grid.get_geometry_data().at(i).at(j) == 5) {
+                } else if (_grid.get_geometry_data().at(i).at(j) == 5) {
                     double temperature = wall_temp_5;
                     Temperature->InsertNextTuple(&temperature);
-                }
-                else{
+                } else {
                     // TODO ID 7/8/9 how to be represented?
                     double temperature = 0;
                     Temperature->InsertNextTuple(&temperature);
                 }
-
             }
         }
     }
@@ -417,17 +406,16 @@ void Case::output_vtk(int file_number) {
     // Print Velocity from bottom to top
     for (int j = 0; j < _grid.domain().size_y + 1; j++) {
         for (int i = 0; i < _grid.domain().size_x + 1; i++) {
-            if (_geom_name.compare("NONE") == 0){
+            if (_geom_name.compare("NONE") == 0) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
-            }
-            else if(_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 || _grid.get_geometry_data().at(i).at(j) == 2){
+            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
+                       _grid.get_geometry_data().at(i).at(j) == 2) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
-            }
-            else {
+            } else {
                 vel[0] = 0;
                 vel[1] = 0;
                 Velocity->InsertNextTuple(vel);

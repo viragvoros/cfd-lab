@@ -4,8 +4,8 @@
 #include <cmath>
 #include <iostream>
 
-Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI,
-               double PI, double TI, std::string energy_eq)
+Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std::vector<Cell *> cells, int imax,
+               int jmax, double UI, double VI, double PI, double TI, std::string energy_eq)
     : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _cells(cells), _energy_eq(energy_eq) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
@@ -27,26 +27,26 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
             t(i, j) = TI;
         }
     }
-        // for (int jx = 0; jx < jmax + 2; jx++ ){
+    // for (int jx = 0; jx < jmax + 2; jx++ ){
 
-        //     for (int ix = 0; ix < imax + 2; ix++) {
-        //         std::cout << _P(ix, jx) << " " ;
-        //     }
-        //     std::cout << "\n";
-        //  }
+    //     for (int ix = 0; ix < imax + 2; ix++) {
+    //         std::cout << _P(ix, jx) << " " ;
+    //     }
+    //     std::cout << "\n";
+    //  }
 }
 
 void Fields::calculate_fluxes(Grid &grid) {
-    //std::cout << _energy_eq << std::endl;
+    // std::cout << _energy_eq << std::endl;
     if (_energy_eq.compare("NONE") == 0) {
         std::cout << "NO_TEMP_FLUX" << std::endl;
         for (int j = 1; j <= grid.jmax(); j++) {
-            for (int i = 1; i <= (grid.imax()-1); i++) {
+            for (int i = 1; i <= (grid.imax() - 1); i++) {
                 f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) -
                                            Discretization::convection_u(_U, _V, i, j) + _gx);
             }
         }
-        for (int j = 1; j <= (grid.jmax()-1); j++) {
+        for (int j = 1; j <= (grid.jmax() - 1); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
                 g(i, j) = v(i, j) + _dt * (_nu * Discretization::diffusion(_V, i, j) -
                                            Discretization::convection_v(_U, _V, i, j) + _gy);
@@ -57,15 +57,19 @@ void Fields::calculate_fluxes(Grid &grid) {
     else {
         std::cout << "WITH_TEMP_FLUX" << std::endl;
         for (int j = 1; j <= grid.jmax(); j++) {
-            for (int i = 1; i <= (grid.imax()-1); i++) {
-                f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) -
-                                           Discretization::convection_u(_U, _V, i, j) + _gx) - _beta * _dt * 0.5 * (t(i, j) + t(i + 1, j)) * _gx;
+            for (int i = 1; i <= (grid.imax() - 1); i++) {
+                f(i, j) = u(i, j) +
+                          _dt * (_nu * Discretization::diffusion(_U, i, j) -
+                                 Discretization::convection_u(_U, _V, i, j) + _gx) -
+                          _beta * _dt * 0.5 * (t(i, j) + t(i + 1, j)) * _gx;
             }
         }
-        for (int j = 1; j <= (grid.jmax()-1); j++) {
+        for (int j = 1; j <= (grid.jmax() - 1); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
-                g(i, j) = v(i, j) + _dt * (_nu * Discretization::diffusion(_V, i, j) -
-                                           Discretization::convection_v(_U, _V, i, j) + _gy) - _beta * _dt * 0.5 * (t(i, j) + t(i, j + 1)) * _gy;
+                g(i, j) = v(i, j) +
+                          _dt * (_nu * Discretization::diffusion(_V, i, j) -
+                                 Discretization::convection_v(_U, _V, i, j) + _gy) -
+                          _beta * _dt * 0.5 * (t(i, j) + t(i, j + 1)) * _gy;
             }
         }
     }
@@ -82,11 +86,11 @@ void Fields::calculate_rs(Grid &grid) {
 
 void Fields::calculate_velocities(Grid &grid) {
     for (int j = 1; j <= grid.jmax(); j++) {
-        for (int i = 1; i <= (grid.imax()-1); i++) {
+        for (int i = 1; i <= (grid.imax() - 1); i++) {
             u(i, j) = f(i, j) - _dt / grid.dx() * (p(i + 1, j) - p(i, j));
         }
     }
-    for (int j = 1; j <= (grid.jmax()-1); j++) {
+    for (int j = 1; j <= (grid.jmax() - 1); j++) {
         for (int i = 1; i <= grid.imax(); i++) {
             v(i, j) = g(i, j) - _dt / grid.dy() * (p(i, j + 1) - p(i, j));
         }
@@ -98,7 +102,8 @@ void Fields::calculate_temperature(Grid &grid) {
         std::cout << "CALC_TEMP" << std::endl;
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
-                t(i, j) = t(i, j) + _dt * (_alpha * Discretization::diffusion(_T, i, j) - Discretization::convection_t(_T, _U, _V, i, j));
+                t(i, j) = t(i, j) + _dt * (_alpha * Discretization::diffusion(_T, i, j) -
+                                           Discretization::convection_t(_T, _U, _V, i, j));
             }
         }
     }
@@ -117,21 +122,20 @@ double Fields::find_max(const Matrix<double> &M, const int &imaxb, const int &jm
 
 // Getting optimum dt based on CFL condition
 double Fields::calculate_dt(Grid &grid) {
-        double val_1 = (1 / (2 * _nu)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
-        double val_2 = grid.dx() / std::abs(find_max(_U, grid.imax(), grid.jmax()));
-        double val_3 = grid.dy() / std::abs(find_max(_V, grid.imax(), grid.jmax()));
-        double max_dt;
+    double val_1 = (1 / (2 * _nu)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
+    double val_2 = grid.dx() / std::abs(find_max(_U, grid.imax(), grid.jmax()));
+    double val_3 = grid.dy() / std::abs(find_max(_V, grid.imax(), grid.jmax()));
+    double max_dt;
 
     if (_energy_eq.compare("NONE") == 0) {
         std::cout << "NO_TEMP_DT" << std::endl;
         max_dt = _tau * std::min({val_1, val_2, val_3});
-    }
-    else {
+    } else {
         std::cout << "WITH_TEMP_DT" << std::endl;
         double val_4 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
         max_dt = _tau * std::min({val_1, val_2, val_3, val_4});
     }
-    
+
     _dt = max_dt;
     return max_dt;
 }

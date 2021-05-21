@@ -25,7 +25,8 @@ class Fields {
      * @param[in] initial pressure
      *
      */
-    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, std::string _energy_eq);
+    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, std::vector<Cell *> cells, int imax,
+           int jmax, double UI, double VI, double PI, double TI, std::string _energy_eq);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
