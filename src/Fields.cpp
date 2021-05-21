@@ -57,12 +57,12 @@ void Fields::calculate_fluxes(Grid &grid) {
     else {
         std::cout << "WITH_TEMP_FLUX" << std::endl;
         for (int j = 1; j <= grid.jmax(); j++) {
-            for (int i = 1; i <= (grid.imax()); i++) {
+            for (int i = 1; i <= (grid.imax()-1); i++) {
                 f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) -
                                            Discretization::convection_u(_U, _V, i, j) + _gx) - _beta * _dt * 0.5 * (t(i, j) + t(i + 1, j)) * _gx;
             }
         }
-        for (int j = 1; j <= (grid.jmax()); j++) {
+        for (int j = 1; j <= (grid.jmax()-1); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
                 g(i, j) = v(i, j) + _dt * (_nu * Discretization::diffusion(_V, i, j) -
                                            Discretization::convection_v(_U, _V, i, j) + _gy) - _beta * _dt * 0.5 * (t(i, j) + t(i, j + 1)) * _gy;
@@ -96,8 +96,8 @@ void Fields::calculate_velocities(Grid &grid) {
 void Fields::calculate_temperature(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
         std::cout << "CALC_TEMP" << std::endl;
-        for (int j = 1; j <= (grid.jmax()); j++) {
-            for (int i = 1; i <= (grid.imax()); i++) {
+        for (int j = 1; j <= grid.jmax(); j++) {
+            for (int i = 1; i <= grid.imax(); i++) {
                 t(i, j) = t(i, j) + _dt * (_alpha * Discretization::diffusion(_T, i, j) - Discretization::convection_t(_T, _U, _V, i, j));
             }
         }
@@ -127,7 +127,7 @@ double Fields::calculate_dt(Grid &grid) {
         max_dt = _tau * std::min({val_1, val_2, val_3});
     }
     else {
-        std::cout << "NO_TEMP_DT" << std::endl;
+        std::cout << "WITH_TEMP_DT" << std::endl;
         double val_4 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
         max_dt = _tau * std::min({val_1, val_2, val_3, val_4});
     }

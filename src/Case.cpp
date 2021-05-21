@@ -148,13 +148,13 @@ Case::Case(std::string file_name, int argn, char **args) {
             std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3()));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp[boundary_ids::fixed_wall_cell_3_id]));
     }
     if (not _grid.fixed_wall_cells_4().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4()));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(), wall_temp[boundary_ids::fixed_wall_cell_4_id]));
     }
     if (not _grid.fixed_wall_cells_5().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5()));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp[boundary_ids::fixed_wall_cell_5_id]));
     }
     /*
     if (not _grid.fixed_wall_cells_6().empty()) {
@@ -162,7 +162,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     */
     if (not _grid.inflow_cells().empty()) {
-        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN));
+        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN));
     }
     if (not _grid.outflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), PI));
@@ -302,7 +302,7 @@ void Case::simulate() {
         output_counter++;
         t = t + dt;
 
-        if (output_counter < 20 || output_counter % 200 == 0) {
+        if (output_counter == 20 || output_counter % 100 == 0) {
             for (auto &boundary : _boundaries) {
             boundary->apply(_field);
             //std::cout << "Entering apply boundaries" << std::endl;
@@ -363,6 +363,11 @@ void Case::output_vtk(int file_number) {
     Pressure->SetName("pressure");
     Pressure->SetNumberOfComponents(1);
 
+    // Temperature Array
+    vtkDoubleArray *Temperature = vtkDoubleArray::New();
+    Temperature->SetName("temperature");
+    Temperature->SetNumberOfComponents(1);
+
     // Velocity Array
     vtkDoubleArray *Velocity = vtkDoubleArray::New();
     Velocity->SetName("velocity");
@@ -371,8 +376,27 @@ void Case::output_vtk(int file_number) {
     // Print pressure and temperature from bottom to top
     for (int j = 1; j < _grid.domain().size_y + 1; j++) {
         for (int i = 1; i < _grid.domain().size_x + 1; i++) {
-            double pressure = _field.p(i, j);
-            Pressure->InsertNextTuple(&pressure);
+            if (_geom_name.compare("NONE") == 0) {
+                double pressure = _field.p(i, j);
+                Pressure->InsertNextTuple(&pressure);
+
+                double temperature = _field.t(i, j);
+                Temperature->InsertNextTuple(&temperature);
+            }
+            else if(_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 || _grid.get_geometry_data().at(i).at(j) == 2) {
+                double pressure = _field.p(i, j);
+                Pressure->InsertNextTuple(&pressure);
+
+                double temperature = _field.t(i, j);
+                Temperature->InsertNextTuple(&temperature);
+            }
+            else {
+                double pressure = 0;
+                Pressure->InsertNextTuple(&pressure);
+
+                double temperature = 0;
+                Temperature->InsertNextTuple(&temperature);
+            }
         }
     }
 
@@ -383,14 +407,29 @@ void Case::output_vtk(int file_number) {
     // Print Velocity from bottom to top
     for (int j = 0; j < _grid.domain().size_y + 1; j++) {
         for (int i = 0; i < _grid.domain().size_x + 1; i++) {
-            vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
-            vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
-            Velocity->InsertNextTuple(vel);
+            if (_geom_name.compare("NONE") == 0){
+                vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
+                vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
+                Velocity->InsertNextTuple(vel);
+            }
+            else if(_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 || _grid.get_geometry_data().at(i).at(j) == 2){
+                vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
+                vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
+                Velocity->InsertNextTuple(vel);
+            }
+            else {
+                vel[0] = 0;
+                vel[1] = 0;
+                Velocity->InsertNextTuple(vel);
+            }
         }
     }
 
     // Add Pressure to Structured Grid
     structuredGrid->GetCellData()->AddArray(Pressure);
+
+    // Add Temperature to Structured Grid
+    structuredGrid->GetCellData()->AddArray(Temperature);
 
     // Add Velocity to Structured Grid
     structuredGrid->GetPointData()->AddArray(Velocity);
