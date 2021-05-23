@@ -55,6 +55,15 @@ class Fields {
     void calculate_velocities(Grid &grid);
 
     /**
+     * @brief Copying matrices
+     *
+     * @param[in] grid in which the calculations are done
+     * @param[in] data to be copied and copied to
+     *
+     */
+    void copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> &TO);
+
+    /**
      * @brief Temperature calculation based on explicit discretization of the heat equation
      *
      * @param[in] grid in which the calculations are done
@@ -94,6 +103,9 @@ class Fields {
     /// temperature index based access and modify
     double &t(int i, int j);
 
+    /// temporary temperature index based access and modify
+    double &temp(int i, int j);
+
     /// get timestep size
     double dt() const;
 
@@ -115,6 +127,8 @@ class Fields {
     Matrix<double> _RS;
     /// temperature matrix
     Matrix<double> _T;
+    /// temporary temperature update
+    Matrix<double> _TEMP;
 
     /// kinematic viscosity
     double _nu;

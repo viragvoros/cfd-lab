@@ -11,6 +11,7 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
     _T = Matrix<double>(imax + 2, jmax + 2);
+    _TEMP = Matrix<double>(imax + 2, jmax + 2);
 
     _F = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _G = Matrix<double>(imax + 2, jmax + 2, 0.0);
@@ -97,15 +98,25 @@ void Fields::calculate_velocities(Grid &grid) {
     }
 }
 
+void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> &TO) {
+    for (int i = 0; i < (grid.imax() + 2); i++) {
+        for (int j = 0; j < (grid.jmax() + 2); j++) {
+            TO(i, j) = FROM(i, j);
+        }
+    }
+}
+
 void Fields::calculate_temperature(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
         std::cout << "CALC_TEMP" << std::endl;
+        copy_matrix(grid, _T, _TEMP);
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
-                t(i, j) = t(i, j) + _dt * (_alpha * Discretization::diffusion(_T, i, j) -
-                                           Discretization::convection_t(_T, _U, _V, i, j));
+                temp(i, j) = temp(i, j) + _dt * (_alpha * Discretization::diffusion(_TEMP, i, j) -
+                                                 Discretization::convection_t(_TEMP, _U, _V, i, j));
             }
         }
+        copy_matrix(grid, _TEMP, _T);
     }
 }
 
@@ -146,6 +157,7 @@ double &Fields::v(int i, int j) { return _V(i, j); }
 double &Fields::f(int i, int j) { return _F(i, j); }
 double &Fields::g(int i, int j) { return _G(i, j); }
 double &Fields::t(int i, int j) { return _T(i, j); }
+double &Fields::temp(int i, int j) { return _TEMP(i, j); }
 double &Fields::rs(int i, int j) { return _RS(i, j); }
 
 Matrix<double> &Fields::p_matrix() { return _P; }
