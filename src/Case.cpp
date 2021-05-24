@@ -102,8 +102,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
     } else {
-        // IDEA: construct maps of ids and velocities/temperatures for constructors of boundaries @Virag: Get rid of
-        // this comment?
+        // Construct maps of ids and velocities/temperatures for constructors of boundaries
         wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
         wall_vel[boundary_ids::fixed_wall_cell_4_id] = wall_vel_4;
         wall_vel[boundary_ids::fixed_wall_cell_5_id] = wall_vel_5;
@@ -133,11 +132,11 @@ Case::Case(std::string file_name, int argn, char **args) {
     _max_iter = itermax;
     _tolerance = eps;
 
-    // TODO fix outlet Construct boundaries
+    // Construct boundaries
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
-        // std::cout << _boundaries.size() << std::endl; // DEBUG
+        // std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(),
@@ -235,8 +234,8 @@ void Case::simulate() {
     // std::cout << "Entering simulate" << std::endl;
     double t = 0.0;
     double dt = _field.dt();
-    // int timestep = 0; @virag: delete?
-    // Changed to integer to use as input parameter for vtk file generation @virag: Delet?
+
+    // Used as input parameter for vtk file generation
     int output_counter = 0;
 
     // Declare parameters for residual calculation
@@ -248,7 +247,7 @@ void Case::simulate() {
     double v_residual;
     double t_residual;
 
-    // counter for SOR fails
+    // Counter for SOR fails
     int SOR_fail_counter{0};
 
     while (t <= _t_end) {
@@ -260,8 +259,6 @@ void Case::simulate() {
         // Calculate optimum timestep
         dt = _field.calculate_dt(_grid);
 
-        // std::cout << dt << std::endl;
-        // std::cout << energy_eq << std::endl;
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
@@ -363,11 +360,7 @@ void Case::output_vtk(int file_number) {
         x = _grid.domain().imin * dx;
         { x += dx; }
         for (int row = 0; row < _grid.domain().size_x + 1; row++) {
-
-            // if(_grid.get_geometry_data().at(x).at(y) == 0){ // maybe TODO .vtk does not work with this
             points->InsertNextPoint(x, y, z);
-            //}
-
             x += dx;
         }
         y += dy;
@@ -422,7 +415,6 @@ void Case::output_vtk(int file_number) {
                     double temperature = wall_temp_5;
                     Temperature->InsertNextTuple(&temperature);
                 } else {
-                    // TODO ID 7/8/9 how to be represented?
                     double temperature = 0;
                     Temperature->InsertNextTuple(&temperature);
                 }

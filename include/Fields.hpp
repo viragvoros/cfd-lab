@@ -80,6 +80,13 @@ class Fields {
      */
     double calculate_dt(Grid &grid);
 
+    /**
+     * @brief Finding maximum element of matrices
+     *
+     * @param[in] maxb maximum elements
+     * @param[in] data the maximum is to be found in
+     *
+     */
     double find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb);
 
     /// x-velocity index based access and modify

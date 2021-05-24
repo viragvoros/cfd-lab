@@ -6,7 +6,7 @@
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std::vector<Cell *> cells, int imax,
                int jmax, double UI, double VI, double PI, double TI, std::string energy_eq, double GX, double GY)
-    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _cells(cells), _energy_eq(energy_eq) {
+    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _cells(cells), _energy_eq(energy_eq), _gx(GX), _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
@@ -16,9 +16,6 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
     _F = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _G = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _RS = Matrix<double>(imax + 2, jmax + 2, 0.0);
-
-    _gx = GX;
-    _gy = GY;
 
     for (const auto &cell : _cells) {
         int i = cell->i();
@@ -42,9 +39,9 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
 }
 
 void Fields::calculate_fluxes(Grid &grid) {
-    // std::cout << _energy_eq << std::endl; // DEBUG
+    // std::cout << _energy_eq << std::endl;
     if (_energy_eq.compare("NONE") == 0) {
-        // std::cout << "NO_TEMP_FLUX" << std::endl; // DEBUG
+        // std::cout << "NO_TEMP_FLUX" << std::endl;
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= (grid.imax() - 1); i++) {
                 f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) -
@@ -60,7 +57,7 @@ void Fields::calculate_fluxes(Grid &grid) {
     }
 
     else {
-        // std::cout << "WITH_TEMP_FLUX" << std::endl; //DEBUG
+        // std::cout << "WITH_TEMP_FLUX" << std::endl;
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= (grid.imax() - 1); i++) {
                 f(i, j) = u(i, j) +
@@ -103,11 +100,12 @@ void Fields::calculate_velocities(Grid &grid) {
         }
     }
     _u_avg =
-        std::sqrt(_u_avg) / (grid.jmax() * (grid.imax() - 1)); // calculate average to prepare for residual calculation
+        std::sqrt(_u_avg) / (grid.jmax() * (grid.imax() - 1)); // Calculate average to prepare for residual calculation
     _v_avg =
-        std::sqrt(_v_avg) / (grid.jmax() * (grid.imax() - 1)); // calculate average to prepare for residual calculation
+        std::sqrt(_v_avg) / (grid.jmax() * (grid.imax() - 1)); // Calculate average to prepare for residual calculation
 }
 
+// Function was implemented to copy matrices
 void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> &TO) {
     for (int i = 0; i < (grid.imax() + 2); i++) {
         for (int j = 0; j < (grid.jmax() + 2); j++) {
@@ -118,7 +116,7 @@ void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> 
 
 void Fields::calculate_temperature(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
-        // std::cout << "CALC_TEMP" << std::endl; // DEBUG
+        // std::cout << "CALC_TEMP" << std::endl;
         copy_matrix(grid, _T, _TEMP);
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
@@ -127,9 +125,8 @@ void Fields::calculate_temperature(Grid &grid) {
                 _t_avg += std::abs(t(i, j)); // Collect field values for later residual calculation
             }
         }
-        // copy_matrix(grid, _TEMP, _T); // @Virag: Delete ?
         _t_avg = std::sqrt(_t_avg) /
-                 (grid.jmax() * (grid.imax() - 1)); // calculate average to prepare for residual calculation
+                 (grid.jmax() * (grid.imax() - 1)); // Calculate average to prepare for residual calculation
     }
 }
 
@@ -152,10 +149,10 @@ double Fields::calculate_dt(Grid &grid) {
     double max_dt;
 
     if (_energy_eq.compare("NONE") == 0) {
-        // std::cout << "NO_TEMP_DT" << std::endl; // DEBUG
+        // std::cout << "NO_TEMP_DT" << std::endl;
         max_dt = _tau * std::min({val_1, val_2, val_3});
     } else {
-        // std::cout << "WITH_TEMP_DT" << std::endl; // DEBUG
+        // std::cout << "WITH_TEMP_DT" << std::endl;
         double val_4 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
         max_dt = _tau * std::min({val_1, val_2, val_3, val_4});
     }
