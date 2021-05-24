@@ -26,7 +26,7 @@ class Fields {
      *
      */
     Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, std::vector<Cell *> cells, int imax,
-           int jmax, double UI, double VI, double PI, double TI, std::string _energy_eq);
+           int jmax, double UI, double VI, double PI, double TI, std::string _energy_eq, double GX, double GY);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
@@ -129,7 +129,6 @@ class Fields {
 
     /// pressure matrix access and modify
     Matrix<double> &p_matrix();
-
 
   private:
     /// x-velocity matrix
