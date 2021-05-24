@@ -106,11 +106,30 @@ class Fields {
     /// temporary temperature index based access and modify
     double &temp(int i, int j);
 
+    /// current mean of the u velocity field
+    double &u_avg();
+
+    /// current mean of the v velocity field
+    double &v_avg();
+
+    /// current mean of the pressure field
+    double &p_avg();
+
+    /// current mean of the pressure field
+    void set_p_avg(double p_avg);
+
+    /// current mean of the temperature field
+    double &t_avg();
+
     /// get timestep size
     double dt() const;
 
+    /// calculate mean value of field matrix for residual calculation
+    double calculate_mean(Grid &grid);
+
     /// pressure matrix access and modify
     Matrix<double> &p_matrix();
+
 
   private:
     /// x-velocity matrix
@@ -148,4 +167,15 @@ class Fields {
     std::vector<Cell *> _cells;
     /// Heat energy on
     std::string _energy_eq{"NONE"};
+    /// Average u velocity for residual calculation
+    double _u_avg;
+
+    /// Average v velocity for residual calculation
+    double _v_avg;
+
+    /// Average pressure for residual calculation
+    double _p_avg;
+
+    /// Average temperature for residual calculation
+    double _t_avg;
 };

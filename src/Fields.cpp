@@ -28,6 +28,7 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
             t(i, j) = TI;
         }
     }
+    // -----------DEBUG -----------------
     // for (int jx = 0; jx < jmax + 2; jx++ ){
 
     //     for (int ix = 0; ix < imax + 2; ix++) {
@@ -38,9 +39,9 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
 }
 
 void Fields::calculate_fluxes(Grid &grid) {
-    // std::cout << _energy_eq << std::endl;
+     // std::cout << _energy_eq << std::endl; // DEBUG
     if (_energy_eq.compare("NONE") == 0) {
-        std::cout << "NO_TEMP_FLUX" << std::endl;
+        //std::cout << "NO_TEMP_FLUX" << std::endl; // DEBUG
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= (grid.imax() - 1); i++) {
                 f(i, j) = u(i, j) + _dt * (_nu * Discretization::diffusion(_U, i, j) -
@@ -56,7 +57,7 @@ void Fields::calculate_fluxes(Grid &grid) {
     }
 
     else {
-        std::cout << "WITH_TEMP_FLUX" << std::endl;
+        //std::cout << "WITH_TEMP_FLUX" << std::endl; //DEBUG
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= (grid.imax() - 1); i++) {
                 f(i, j) = u(i, j) +
@@ -89,13 +90,17 @@ void Fields::calculate_velocities(Grid &grid) {
     for (int j = 1; j <= grid.jmax(); j++) {
         for (int i = 1; i <= (grid.imax() - 1); i++) {
             u(i, j) = f(i, j) - _dt / grid.dx() * (p(i + 1, j) - p(i, j));
+            _u_avg += std::abs(u(i, j)); // Collect field values for later residual calculation
         }
     }
     for (int j = 1; j <= (grid.jmax() - 1); j++) {
         for (int i = 1; i <= grid.imax(); i++) {
             v(i, j) = g(i, j) - _dt / grid.dy() * (p(i, j + 1) - p(i, j));
+            _v_avg += std::abs(v(i, j)); // Collect field values for later residual calculation
         }
     }
+    _u_avg = std::sqrt(_u_avg) / (grid.jmax() * (grid.imax() - 1) );  //calculate average to prepare for residual calculation
+    _v_avg = std::sqrt(_v_avg) / (grid.jmax() * (grid.imax() - 1) ); //calculate average to prepare for residual calculation
 }
 
 void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> &TO) {
@@ -108,15 +113,17 @@ void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> 
 
 void Fields::calculate_temperature(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
-        std::cout << "CALC_TEMP" << std::endl;
+        //std::cout << "CALC_TEMP" << std::endl; // DEBUG
         copy_matrix(grid, _T, _TEMP);
         for (int j = 1; j <= grid.jmax(); j++) {
             for (int i = 1; i <= grid.imax(); i++) {
-                temp(i, j) = temp(i, j) + _dt * (_alpha * Discretization::diffusion(_TEMP, i, j) -
+                t(i, j) = temp(i, j) + _dt * (_alpha * Discretization::diffusion(_TEMP, i, j) -
                                                  Discretization::convection_t(_TEMP, _U, _V, i, j));
+                _t_avg += std::abs(t(i, j)); // Collect field values for later residual calculation
             }
         }
-        copy_matrix(grid, _TEMP, _T);
+        //copy_matrix(grid, _TEMP, _T); // @Virag: Delete ?
+        _t_avg = std::sqrt(_t_avg) / (grid.jmax() * (grid.imax() - 1) ); //calculate average to prepare for residual calculation
     }
 }
 
@@ -139,10 +146,10 @@ double Fields::calculate_dt(Grid &grid) {
     double max_dt;
 
     if (_energy_eq.compare("NONE") == 0) {
-        std::cout << "NO_TEMP_DT" << std::endl;
+        //std::cout << "NO_TEMP_DT" << std::endl; // DEBUG
         max_dt = _tau * std::min({val_1, val_2, val_3});
     } else {
-        std::cout << "WITH_TEMP_DT" << std::endl;
+        //std::cout << "WITH_TEMP_DT" << std::endl; // DEBUG
         double val_4 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
         max_dt = _tau * std::min({val_1, val_2, val_3, val_4});
     }
@@ -163,3 +170,8 @@ double &Fields::rs(int i, int j) { return _RS(i, j); }
 Matrix<double> &Fields::p_matrix() { return _P; }
 
 double Fields::dt() const { return _dt; }
+double &Fields::u_avg()  { return _u_avg; }
+double &Fields::v_avg()  { return _v_avg; }
+double &Fields::p_avg() { return _p_avg; }
+double &Fields::t_avg() { return _t_avg; }
+void Fields::set_p_avg(double p_avg) {_p_avg = p_avg;}

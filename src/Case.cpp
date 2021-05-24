@@ -102,7 +102,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
     } else {
-        // IDEA: construct maps of ids and velocities/temperatures for constructors of boundaries
+        // IDEA: construct maps of ids and velocities/temperatures for constructors of boundaries @Virag: Get rid of this comment?
         wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
         wall_vel[boundary_ids::fixed_wall_cell_4_id] = wall_vel_4;
         wall_vel[boundary_ids::fixed_wall_cell_5_id] = wall_vel_5;
@@ -136,7 +136,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
-        std::cout << _boundaries.size() << std::endl;
+        //std::cout << _boundaries.size() << std::endl; // DEBUG
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(),
@@ -150,7 +150,7 @@ Case::Case(std::string file_name, int argn, char **args) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(),
                                                                   wall_temp[boundary_ids::fixed_wall_cell_5_id]));
     }
-    /*
+    /* Skeleton, in case we need a 6th wall type
     if (not _grid.fixed_wall_cells_6().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_6()));
     }
@@ -161,8 +161,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.outflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), PI));
     }
-
-    // std::cout << _boundaries.size() << std::endl; // is this supposed to be only 3? How is this organised?
 }
 
 void Case::set_file_names(std::string file_name) {
@@ -233,19 +231,36 @@ void Case::set_file_names(std::string file_name) {
  */
 void Case::simulate() {
 
-    std::cout << "Entering simulate" << std::endl;
+    //std::cout << "Entering simulate" << std::endl;
     double t = 0.0;
     double dt = _field.dt();
-    int timestep = 0;
-    // Changed to integer to use as input parameter for vtk file generation
+    // int timestep = 0; @virag: delete?
+    // Changed to integer to use as input parameter for vtk file generation @virag: Delet?
     int output_counter = 0;
 
+    //Declare parameters for residual calculation
+    double previous_mean_u;
+    double previous_mean_v;
+    double mean_p;
+    double previous_mean_t;
+    double u_residual;
+    double v_residual;
+    double t_residual;
+
+    //counter for SOR fails
+    int SOR_fail_counter {0};
+
     while (t <= _t_end) {
+        //Store old mean values for later residual calculation
+        previous_mean_u = _field.u_avg();
+        previous_mean_v = _field.v_avg();
+        previous_mean_t = _field.t_avg();
+
         // Calculate optimum timestep
         dt = _field.calculate_dt(_grid);
 
-        std::cout << dt << std::endl;
-        std::cout << energy_eq << std::endl;
+        //std::cout << dt << std::endl;
+        //std::cout << energy_eq << std::endl;
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
@@ -260,15 +275,17 @@ void Case::simulate() {
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance) {
-                // std::cout << res << std::endl;
+                //  std::cout << res << std::endl; // DEBUG
+                mean_p = res; //pressure residual
                 break;
             }
             nb_iter++;
         }
 
         if (nb_iter == _max_iter + 1) {
-            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\n"
+            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\t"
                       << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
+            SOR_fail_counter ++;
         }
 
         _field.calculate_velocities(_grid);
@@ -299,6 +316,11 @@ void Case::simulate() {
                 boundary->apply(_field);
                 // std::cout << "Entering apply boundaries" << std::endl;
             }
+            u_residual = std::abs(1 - previous_mean_u/_field.u_avg());
+            v_residual = std::abs(1 - previous_mean_v/_field.v_avg());
+            t_residual = std::abs(1 - previous_mean_t/_field.t_avg());
+            std::cout << "Time: " << t << "\t"<< "dt: " << dt << "\t\t" << "SOR-Iter: " << nb_iter << "\t"
+                      << "U-Mean-Res: " << u_residual << "\t\t" << "V-Mean-Res: " << v_residual << "\t\t" << "P-Res: " << mean_p << "\t" << "T-Mean-Res: " << t_residual << "\t" << std::endl;
             output_vtk(output_counter);
         }
 
@@ -309,6 +331,10 @@ void Case::simulate() {
     }
 
     output_vtk(output_counter);
+    std::cout << "\nEnd of Simulation \n\nSimulation Report: " << "End time: " << t <<
+        "\t || SOR Solver failed " << SOR_fail_counter << " times. Check previous terminal information to find the corresponding timesteps." << std::endl;
+
+
 }
 
 void Case::output_vtk(int file_number) {
