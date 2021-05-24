@@ -59,10 +59,15 @@ If input file does not contain a geometry file, fluidchen will run lid-driven ca
 
 ### Simulation Report
 Fluidchen is printing important information about the simulation to the terminal at runtime.
-#### Gemeral Information
+#### General Information
 
 * If the SOR solver doesn't converge it will tell you at which timestep it fails
 * Mean value residuals of the velocities in x and y directions and temperature (U-Mean-Res, V-Mean-Res, T-Mean-Res), calculated with the following formula:
+```cpp
+u_residual = std::abs(1 - previous_mean_u / _field.u_avg());
+v_residual = std::abs(1 - previous_mean_v / _field.v_avg());
+t_residual = std::abs(1 - previous_mean_t / _field.t_avg());
+```
 * The mean value of the pressure value, calculate in the SOR solver (this one is also used as an exit condition for the SOR-solver)
 
 #### How to interpret the result statistics
@@ -71,7 +76,7 @@ For unsteady solutions the residuals will probably decrease at the beginning of 
 
 WARNING: 
 * Fluidchen always plots all residual values. In simulations where there is no temperature calculated, the residual value for temperature will be nan. 
-* In our simulation exmples the volume forces are set to zero. That means we will not see velocity developments based on temperature differences. Accordingly the residuals for velocity and pressure as well as the SOR-Iterations can be zero.
+* In our simulation examples the volume forces are set to zero. That means we will not see velocity developments based on temperature differences. Accordingly the residuals for velocity and pressure as well as the SOR-Iterations can be zero.
 
 This is how the terminal information could look like:
 
