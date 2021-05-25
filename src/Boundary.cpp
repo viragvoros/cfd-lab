@@ -36,8 +36,10 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j + 1);
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = field.t(i, j + 1);
                 }
             } else if (cell_borders[0] ==
                        border_position::BOTTOM) { // Border is in BOTTOM position (fluid cell under ghost cell)
@@ -48,8 +50,10 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j - 1);
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = field.t(i, j - 1);
                 }
             } else if (cell_borders[0] ==
                        border_position::LEFT) { // Border is in LEFT position (fluid cell is left from ghost cell)
@@ -60,9 +64,12 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i - 1, j);
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = field.t(i - 1, j);
                 }
+
             } else if (cell_borders[0] ==
                        border_position::RIGHT) { // Border is in RIGHT position (fluid cell is right from ghost cell)
                 field.u(i, j) = 0;
@@ -71,8 +78,10 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i + 1, j);
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = field.t(i + 1, j);
                 }
             }
         }
@@ -91,9 +100,13 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i + 1, j));
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j + 1));
+                    //field.t(i, j) = field.t(i + 1, j) ;
                 }
+
             } else if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::TOP)) { // Borders in TOP and LEFT position
@@ -107,9 +120,13 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j) = field.v(i, j);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i - 1, j));
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j + 1));
+                    //field.t(i, j) = field.t(i, j + 1));
                 }
+
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||
                        (cell_borders[0] == border_position::RIGHT &&
                         cell_borders[1] == border_position::BOTTOM)) { // Borders in BOTTOM and RIGHT position
@@ -122,9 +139,13 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i + 1, j));
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){
+                    field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j - 1));
+                    //field.t(i, j) = field.t(i, j - 1);
                 }
+
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::BOTTOM)) { // Borders in BOTTOM and LEFT position
@@ -137,8 +158,11 @@ void FixedWallBoundary::apply(Fields &field) {
                 field.f(i - 1, j) = field.u(i - 1, j);
                 field.g(i, j - 1) = field.v(i, j - 1);
 
-                if (!_wall_temperature.empty()) {
+                if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i - 1, j));
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1){ // adiabatic
+                    field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j - 1));
+                    //field.t(i, j) = field.t(i, j - 1);
                 }
             }
         }
