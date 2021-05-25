@@ -39,7 +39,7 @@ dt_value     10.0
 # gamma: upwind differencing factor
 #--------------------------------------------
 itermax      1000
-eps          0.001
+eps          0.00001
 omg          1.7
 gamma        0.5
 
@@ -81,7 +81,7 @@ energy_eq   on
 TI          0
 TIN         0
 beta        0.00063
-alpha       0.00001429
+alpha       0.5
 
 #--------------------------------------------
 #          wall clusterss

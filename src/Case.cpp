@@ -140,15 +140,15 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(),
-                                                                  wall_temp[boundary_ids::fixed_wall_cell_3_id]));
+                                                                  wall_temp));
     }
     if (not _grid.fixed_wall_cells_4().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(),
-                                                                  wall_temp[boundary_ids::fixed_wall_cell_4_id]));
+                                                                  wall_temp));
     }
     if (not _grid.fixed_wall_cells_5().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(),
-                                                                  wall_temp[boundary_ids::fixed_wall_cell_5_id]));
+                                                                  wall_temp));
     }
     /* Skeleton, in case we need a 6th wall type
     if (not _grid.fixed_wall_cells_6().empty()) {
