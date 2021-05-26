@@ -139,16 +139,13 @@ Case::Case(std::string file_name, int argn, char **args) {
         // std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(),
-                                                                  wall_temp));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp));
     }
     if (not _grid.fixed_wall_cells_4().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(),
-                                                                  wall_temp));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(), wall_temp));
     }
     if (not _grid.fixed_wall_cells_5().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(),
-                                                                  wall_temp));
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp));
     }
     /* Skeleton, in case we need a 6th wall type
     if (not _grid.fixed_wall_cells_6().empty()) {
