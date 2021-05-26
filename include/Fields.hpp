@@ -158,9 +158,9 @@ class Fields {
     /// kinematic viscosity
     double _nu;
     /// gravitional accelearation in x direction
-    double _gx{0.0};
+    double _gx;
     /// gravitional accelearation in y direction
-    double _gy{0.0};
+    double _gy;
     /// timestep size
     double _dt;
     /// adaptive timestep coefficient

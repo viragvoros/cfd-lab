@@ -6,7 +6,7 @@
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std::vector<Cell *> cells, int imax,
                int jmax, double UI, double VI, double PI, double TI, std::string energy_eq, double GX, double GY)
-    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _cells(cells), _energy_eq(energy_eq), _gx(GX), _gy(GY) {
+    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _cells(cells), _gx(GX), _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
@@ -16,6 +16,8 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
     _F = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _G = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _RS = Matrix<double>(imax + 2, jmax + 2, 0.0);
+
+    _energy_eq = energy_eq;
 
     for (const auto &cell : _cells) {
         int i = cell->i();

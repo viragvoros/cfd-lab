@@ -8,6 +8,7 @@ FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells) : _cells(cells) 
 FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature)
     : _cells(cells), _wall_temperature(wall_temperature) {}
 
+// Constructor only used for LidDrivenCavity, where no geometry is available
 FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, double wall_temperature) : _cells(cells) {
     _wall_temperature.insert(std::pair(boundary_ids::fixed_wall_cell_3_id, wall_temperature));
 }
