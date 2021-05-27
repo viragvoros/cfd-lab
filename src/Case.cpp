@@ -263,8 +263,23 @@ void Case::simulate() {
         }
 
         _field.calculate_temperature(_grid);
+        for (auto &boundary : _boundaries) {
+            boundary->apply(_field);
+            // std::cout << "Entering apply boundaries" << std::endl;
+        }
+
         _field.calculate_fluxes(_grid);
+        for (auto &boundary : _boundaries) {
+            boundary->apply(_field);
+            // std::cout << "Entering apply boundaries" << std::endl;
+        }
+
         _field.calculate_rs(_grid);
+        for (auto &boundary : _boundaries) {
+            boundary->apply(_field);
+            // std::cout << "Entering apply boundaries" << std::endl;
+        }
+
 
         int nb_iter = 0;
         while (nb_iter <= _max_iter) {
@@ -284,6 +299,11 @@ void Case::simulate() {
         }
 
         _field.calculate_velocities(_grid);
+        for (auto &boundary : _boundaries) {
+            boundary->apply(_field);
+            // std::cout << "Entering apply boundaries" << std::endl;
+        }
+
 
         // --------------DEBUG: Printig fields to console ----------------
 
@@ -307,10 +327,10 @@ void Case::simulate() {
         t = t + dt;
 
         if (output_counter == 20 || output_counter % 100 == 0) {
-            for (auto &boundary : _boundaries) {
-                boundary->apply(_field);
-                // std::cout << "Entering apply boundaries" << std::endl;
-            }
+//            for (auto &boundary : _boundaries) {
+//                boundary->apply(_field);
+//                // std::cout << "Entering apply boundaries" << std::endl;
+//            }
             u_residual = std::abs(1 - previous_mean_u / _field.u_avg());
             v_residual = std::abs(1 - previous_mean_v / _field.v_avg());
             t_residual = std::abs(1 - previous_mean_t / _field.t_avg());
@@ -323,11 +343,6 @@ void Case::simulate() {
                       << "T-Mean-Res: " << t_residual << "\t" << std::endl;
             output_vtk(output_counter);
         }
-
-        //     // Additional application of boundary conditions as mentioned in tutorial.
-        // for (auto &boundary : _boundaries) {
-        //     boundary->apply(_field);
-        // }
     }
 
     output_vtk(output_counter);

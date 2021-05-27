@@ -123,9 +123,10 @@ void FixedWallBoundary::apply(Fields &field) {
 
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i - 1, j));
+
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
                     field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j + 1));
-                    // field.t(i, j) = field.t(i, j + 1));
+
                 }
 
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||

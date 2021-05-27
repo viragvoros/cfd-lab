@@ -64,7 +64,7 @@ void Fields::calculate_fluxes(Grid &grid) {
             for (int i = 1; i <= (grid.imax() - 1); i++) {
                 f(i, j) = u(i, j) +
                           _dt * (_nu * Discretization::diffusion(_U, i, j) -
-                                 Discretization::convection_u(_U, _V, i, j) + _gx) -
+                                 Discretization::convection_u(_U, _V, i, j) + _gx) - //getting rid of _gx "magically" solves it
                           _beta * _dt * 0.5 * (t(i, j) + t(i + 1, j)) * _gx;
             }
         }
@@ -72,14 +72,14 @@ void Fields::calculate_fluxes(Grid &grid) {
             for (int i = 1; i <= grid.imax(); i++) {
                 g(i, j) = v(i, j) +
                           _dt * (_nu * Discretization::diffusion(_V, i, j) -
-                                 Discretization::convection_v(_U, _V, i, j) + _gy) -
+                                 Discretization::convection_v(_U, _V, i, j) + _gy) - //getting rid of _gy "magically" solves it
                           _beta * _dt * 0.5 * (t(i, j) + t(i, j + 1)) * _gy;
             }
         }
     }
 }
 
-// Calculate righ-hand-side of PPE
+// Calculate right-hand-side of PPE
 void Fields::calculate_rs(Grid &grid) {
     for (int j = 1; j <= grid.jmax(); j++) {
         for (int i = 1; i <= grid.imax(); i++) {
