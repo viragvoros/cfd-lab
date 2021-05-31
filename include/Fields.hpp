@@ -83,11 +83,11 @@ class Fields {
     /**
      * @brief Finding maximum element of matrices
      *
-     * @param[in] maxb maximum elements
+     * @param[in] grid in which the calculations are done
      * @param[in] data the maximum is to be found in
      *
      */
-    double find_max(const Matrix<double> &M, const int &imaxb, const int &jmaxb);
+    double find_max(const Matrix<double> &M, const Grid &grid);
 
     /// x-velocity index based access and modify
     double &u(int i, int j);
@@ -131,7 +131,7 @@ class Fields {
     /// get timestep size
     double dt() const;
 
-    /// calculate mean value of field matrix for residual calculation
+    /// calculate mean value of field matrix for relative update calculation
     double calculate_mean(Grid &grid);
 
     /// pressure matrix access and modify
@@ -173,15 +173,15 @@ class Fields {
     std::vector<Cell *> _cells;
     /// Heat energy on
     std::string _energy_eq{"NONE"};
-    /// Average u velocity for residual calculation
+    /// Average u velocity for relative update calculation
     double _u_avg;
 
-    /// Average v velocity for residual calculation
+    /// Average v velocity for relative update calculation
     double _v_avg;
 
-    /// Average pressure for residual calculation
+    /// Average pressure for relative update calculation
     double _p_avg;
 
-    /// Average temperature for residual calculation
+    /// Average temperature for relative update calculation
     double _t_avg;
 };

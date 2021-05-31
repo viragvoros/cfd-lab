@@ -3,8 +3,6 @@
 #include <cmath>
 #include <iostream>
 
-FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells) : _cells(cells) {}
-
 FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature)
     : _cells(cells), _wall_temperature(wall_temperature) {}
 
@@ -105,13 +103,11 @@ void FixedWallBoundary::apply(Fields &field) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i + 1, j));
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
                     field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j + 1));
-                    // field.t(i, j) = field.t(i + 1, j) ;
                 }
 
             } else if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) ||
                        (cell_borders[0] == border_position::LEFT &&
                         cell_borders[1] == border_position::TOP)) { // Borders in TOP and LEFT position
-                                                                    // std::cout << "Top Left" << std::endl;
 
                 field.u(i, j) = -field.u(i, j + 1);
                 field.v(i, j) = 0;
@@ -126,7 +122,6 @@ void FixedWallBoundary::apply(Fields &field) {
 
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
                     field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j + 1));
-
                 }
 
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||
@@ -145,7 +140,6 @@ void FixedWallBoundary::apply(Fields &field) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i + 1, j));
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
                     field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j - 1));
-                    // field.t(i, j) = field.t(i, j - 1);
                 }
 
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) ||
@@ -162,31 +156,30 @@ void FixedWallBoundary::apply(Fields &field) {
 
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i - 1, j));
-                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) { // adiabatic
+                } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
                     field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j - 1));
-                    // field.t(i, j) = field.t(i, j - 1);
                 }
             }
         }
     }
 
-    // ----------- For debugging: Printing velocity fields to console
-
-    // std::cout << "---------------------- u field ------------------------------" << std::endl;
-    //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 102; ix++) {
-    //                  std::cout << field.u(ix, jx) << " " ;
-    //                 }
-    //             std::cout << "\n";
-    //          }
-
-    // std::cout << "---------------------- v field ------------------------------" << std::endl;
-    //  for (int jx = 0; jx < 22; jx++ ){
-    //              for (int ix = 0; ix < 102; ix++) {
-    //                  std::cout << field.v(ix, jx) << " " ;
-    //                 }
-    //             std::cout << "\n";
-    //          }
+    /*
+    // DEBUG: Printig fields to console
+    std::cout << "---------------------- u field ------------------------------" << std::endl;
+    for (int jx = 0; jx < 22; jx++ ){
+        for (int ix = 0; ix < 73; ix++) {
+            std::cout << _field.u(ix, jx) << " " ;
+        }
+        std::cout << "\n";
+    }
+    std::cout << "---------------------- v field ------------------------------" << std::endl;
+    for (int jx = 0; jx < 22; jx++ ){
+        for (int ix = 0; ix < 73; ix++) {
+            std::cout << _field.v(ix, jx) << " " ;
+        }
+        std::cout << "\n";
+    }
+    */
 }
 
 MovingWallBoundary::MovingWallBoundary(std::vector<Cell *> cells, double wall_velocity) : _cells(cells) {
@@ -251,12 +244,6 @@ void MovingWallBoundary::apply(Fields &field) {
                 }
             }
         }
-
-        /* NOT NEEDED YET, TODO LATER
-        else if (cell_borders.size() == 2) {
-            // do same as above
-        }
-        */
     }
 }
 
@@ -326,19 +313,6 @@ void InFlowBoundary::apply(Fields &field) {
                 }
             }
         }
-
-        /* NOT NEEDED YET, TODO LATER
-
-        else if (cell_borders.size() == 2) {
-
-            if ( (cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::RIGHT)
-                || (cell_borders[0] == border_position::RIGHT && cell_borders[1] == border_position::TOP) ) {   //
-        borders in TOP and RIGHT position
-
-
-            }
-        }
-        */
     }
 }
 
@@ -388,18 +362,5 @@ void OutFlowBoundary::apply(Fields &field) {
                 field.t(i, j) = field.t(i + 1, j);
             }
         }
-
-        /* NOT NEEDED YET, TODO LATER
-
-        else if (cell_borders.size() == 2) {
-
-            if ( (cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::RIGHT)
-                || (cell_borders[0] == border_position::RIGHT && cell_borders[1] == border_position::TOP) ) {   //
-        borders in TOP and RIGHT position
-
-
-            }
-        }
-        */
     }
 }

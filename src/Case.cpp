@@ -235,20 +235,20 @@ void Case::simulate() {
     // Used as input parameter for vtk file generation
     int output_counter = 0;
 
-    // Declare parameters for residual calculation
+    // Declare parameters for relative update calculation
     double previous_mean_u;
     double previous_mean_v;
     double mean_p;
     double previous_mean_t;
-    double u_residual;
-    double v_residual;
-    double t_residual;
+    double u_rel_update;
+    double v_rel_update;
+    double t_rel_update;
 
     // Counter for SOR fails
     int SOR_fail_counter{0};
 
     while (t <= _t_end) {
-        // Store old mean values for later residual calculation
+        // Store old mean values for later relative update calculation
         previous_mean_u = _field.u_avg();
         previous_mean_v = _field.v_avg();
         previous_mean_t = _field.t_avg();
@@ -263,30 +263,22 @@ void Case::simulate() {
         }
 
         _field.calculate_temperature(_grid);
-        for (auto &boundary : _boundaries) {
-            boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
-        }
 
         _field.calculate_fluxes(_grid);
+        // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
             // std::cout << "Entering apply boundaries" << std::endl;
         }
 
         _field.calculate_rs(_grid);
-        for (auto &boundary : _boundaries) {
-            boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
-        }
-
 
         int nb_iter = 0;
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance) {
                 //  std::cout << res << std::endl; // DEBUG
-                mean_p = res; // pressure residual
+                mean_p = res; // pressure relative update
                 break;
             }
             nb_iter++;
@@ -299,48 +291,39 @@ void Case::simulate() {
         }
 
         _field.calculate_velocities(_grid);
-        for (auto &boundary : _boundaries) {
-            boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
+
+        /*
+        // DEBUG: Printig fields to console
+        std::cout << "---------------------- u field ------------------------------" << std::endl;
+        for (int jx = 0; jx < 22; jx++ ){
+            for (int ix = 0; ix < 73; ix++) {
+                std::cout << _field.u(ix, jx) << " " ;
+            }
+            std::cout << "\n";
         }
-
-
-        // --------------DEBUG: Printig fields to console ----------------
-
-        //     std::cout << "---------------------- u field ------------------------------" << std::endl;
-        //  for (int jx = 0; jx < 22; jx++ ){
-        //              for (int ix = 0; ix < 73; ix++) {
-        //                  std::cout << _field.u(ix, jx) << " " ;
-        //                 }
-        //             std::cout << "\n";
-        //          }
-
-        // std::cout << "---------------------- v field ------------------------------" << std::endl;
-        //  for (int jx = 0; jx < 22; jx++ ){
-        //              for (int ix = 0; ix < 73; ix++) {
-        //                  std::cout << _field.v(ix, jx) << " " ;
-        //                 }
-        //             std::cout << "\n";
-        //          }
+        std::cout << "---------------------- v field ------------------------------" << std::endl;
+        for (int jx = 0; jx < 22; jx++ ){
+            for (int ix = 0; ix < 73; ix++) {
+                std::cout << _field.v(ix, jx) << " " ;
+            }
+            std::cout << "\n";
+        }
+        */
 
         output_counter++;
         t = t + dt;
 
         if (output_counter == 20 || output_counter % 100 == 0) {
-//            for (auto &boundary : _boundaries) {
-//                boundary->apply(_field);
-//                // std::cout << "Entering apply boundaries" << std::endl;
-//            }
-            u_residual = std::abs(1 - previous_mean_u / _field.u_avg());
-            v_residual = std::abs(1 - previous_mean_v / _field.v_avg());
-            t_residual = std::abs(1 - previous_mean_t / _field.t_avg());
+            u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
+            v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
+            t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
             std::cout << "Time: " << t << "\t"
                       << "dt: " << dt << "\t\t"
                       << "SOR-Iter: " << nb_iter << "\t"
-                      << "U-Mean-Res: " << u_residual << "\t\t"
-                      << "V-Mean-Res: " << v_residual << "\t\t"
-                      << "P-Res: " << mean_p << "\t"
-                      << "T-Mean-Res: " << t_residual << "\t" << std::endl;
+                      << "U-Rel-Update: " << u_rel_update << "\t"
+                      << "V-Rel-Update: " << v_rel_update << "\t"
+                      << "P-Rel-Update: " << mean_p << "\t"
+                      << "T-Rel-Update: " << t_rel_update << "\t" << std::endl;
             output_vtk(output_counter);
         }
     }
