@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <vector>
 
@@ -389,21 +389,24 @@ void Case::output_vtk(int file_number) {
             if (_geom_name.compare("NONE") == 0) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
-
-                double temperature = _field.t(i, j);
-                Temperature->InsertNextTuple(&temperature);
             } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
                        _grid.get_geometry_data().at(i).at(j) == 2) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
-
-                double temperature = _field.t(i, j);
-                Temperature->InsertNextTuple(&temperature);
             } else {
                 double pressure = 0;
                 Pressure->InsertNextTuple(&pressure);
+            }
 
-                if (_grid.get_geometry_data().at(i).at(j) == 3) {
+            if (energy_eq.compare("NONE") != 0) {
+                if (_geom_name.compare("NONE") == 0) {
+                    double temperature = _field.t(i, j);
+                    Temperature->InsertNextTuple(&temperature);
+                } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
+                           _grid.get_geometry_data().at(i).at(j) == 2) {
+                    double temperature = _field.t(i, j);
+                    Temperature->InsertNextTuple(&temperature);
+                } else if (_grid.get_geometry_data().at(i).at(j) == 3) {
                     double temperature = wall_temp_3;
                     Temperature->InsertNextTuple(&temperature);
                 } else if (_grid.get_geometry_data().at(i).at(j) == 4) {
@@ -448,7 +451,9 @@ void Case::output_vtk(int file_number) {
     structuredGrid->GetCellData()->AddArray(Pressure);
 
     // Add Temperature to Structured Grid
-    structuredGrid->GetCellData()->AddArray(Temperature);
+    if (energy_eq.compare("NONE") != 0) {
+        structuredGrid->GetCellData()->AddArray(Temperature);
+    }
 
     // Add Velocity to Structured Grid
     structuredGrid->GetPointData()->AddArray(Velocity);
