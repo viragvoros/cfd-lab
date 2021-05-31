@@ -62,21 +62,21 @@ Fluidchen is printing important information about the simulation to the terminal
 #### General Information
 
 * If the SOR solver doesn't converge it will tell you at which timestep it fails
-* Mean value residuals of the velocities in x and y directions and temperature (U-Mean-Res, V-Mean-Res, T-Mean-Res), calculated with the following formula:
+* Relative update of the velocities in x and y directions and temperature (U-Rel-Update, V-Rel-Update, T-Rel-Update), calculated with the following formula:
 ```cpp
-u_residual = std::abs(1 - previous_mean_u / _field.u_avg());
-v_residual = std::abs(1 - previous_mean_v / _field.v_avg());
-t_residual = std::abs(1 - previous_mean_t / _field.t_avg());
+u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
+v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
+t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
 ```
-* The mean value of the pressure value, calculate in the SOR solver (this one is also used as an exit condition for the SOR-solver)
+* The relative update of the pressure value, calculate in the SOR solver (this one is also used as an exit condition for the SOR-solver)
 
 #### How to interpret the result statistics
-If the user expects a steady solution, then the residuals are a good metric for judging the convergence of the simulation. The lower they are the better and the user can also terminate the simulation once the residuals are below a desired threshold by using "Ctrl + C".
-For unsteady solutions the residuals will probably decrease at the beginning of the solution and later oscillate.
+If the user expects a steady solution, then the relative updates are a good metric for judging the convergence of the simulation. The lower they are the better and the user can also terminate the simulation once the relative update values are below a desired threshold by using "Ctrl + C".
+For unsteady solutions the relative update values will probably decrease at the beginning of the solution and later oscillate.
 
 WARNING: 
-* Fluidchen always plots all residual values. In simulations where there is no temperature calculated, the residual value for temperature will be nan. 
-* In our simulation examples the volume forces are set to zero. That means we will not see velocity developments based on temperature differences. Accordingly the residuals for velocity and pressure as well as the SOR-Iterations can be zero.
+* Fluidchen always plots all relative update values. In simulations where there is no temperature calculated, the relative update value for temperature will be nan. 
+* In our simulation examples the volume forces are set to zero. That means we will not see velocity developments based on temperature differences. Accordingly the relative update for velocity and pressure as well as the SOR-Iterations can be zero.
 
 This is how the terminal information could look like:
 
