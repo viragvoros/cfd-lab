@@ -317,13 +317,15 @@ void Case::simulate() {
             u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
             v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
             t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
-            std::cout << "Time: " << t << "\t"
-                      << "dt: " << dt << "\t\t"
+            std::cout << std::fixed;
+            std::cout << std::setprecision(5);
+            std::cout << "Time: " << t << "\t\t"
+                      << "dt: " << dt << "\t"
                       << "SOR-Iter: " << nb_iter << "\t"
-                      << "U-Rel-Update: " << u_rel_update << "\t"
-                      << "V-Rel-Update: " << v_rel_update << "\t"
-                      << "P-Rel-Update: " << mean_p << "\t"
-                      << "T-Rel-Update: " << t_rel_update << "\t" << std::endl;
+                      << "U-Rel-Update: " << u_rel_update << "\t\t"
+                      << "V-Rel-Update: " << v_rel_update << "\t\t"
+                      << "P-Rel-Update: " << mean_p << "\t\t"
+                      << "T-Rel-Update: " << t_rel_update << std::endl;
             output_vtk(output_counter);
         }
     }

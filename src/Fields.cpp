@@ -50,12 +50,10 @@ void Fields::calculate_fluxes(Grid &grid) {
             int j = cell->j();
 
             f(i, j) = u(i, j) +
-                      _dt * (_nu * Discretization::diffusion(_U, i, j) - Discretization::convection_u(_U, _V, i, j) +
-                             _gx) - // getting rid of _gx "magically" solves it
+                      _dt * (_nu * Discretization::diffusion(_U, i, j) - Discretization::convection_u(_U, _V, i, j)) - // removed _gx from NS
                       _beta * _dt * 0.5 * (t(i, j) + t(i + 1, j)) * _gx;
             g(i, j) = v(i, j) +
-                      _dt * (_nu * Discretization::diffusion(_V, i, j) - Discretization::convection_v(_U, _V, i, j) +
-                             _gy) - // getting rid of _gy "magically" solves it
+                      _dt * (_nu * Discretization::diffusion(_V, i, j) - Discretization::convection_v(_U, _V, i, j)) - // removed _gy from NS
                       _beta * _dt * 0.5 * (t(i, j) + t(i, j + 1)) * _gy;
         }
     }
