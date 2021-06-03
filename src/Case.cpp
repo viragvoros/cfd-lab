@@ -8,6 +8,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <mpi.h>
+#include <cmath> 
 
 namespace filesystem = std::filesystem;
 
@@ -40,8 +42,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     double tau;     /* safety factor for time step*/
     int itermax;    /* max. number of iterations for pressure per time step */
     double eps;     /* accuracy bound for pressure*/
-    int iproc;
-    int jproc;
     double UIN;       /* inlet velocity x-direction */
     double VIN;       /* inlet velocity y-direction */
     int num_of_walls; /* number of walls */
@@ -117,10 +117,10 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     // Build up the domain
     Domain domain;
-    domain.dx = xlength / (double)imax;
+    domain.dx = xlength / (double)imax; // physical length of one cell
     domain.dy = ylength / (double)jmax;
-    domain.domain_size_x = imax;
-    domain.domain_size_y = jmax;
+    domain.domain_size_x = imax; // global domain size x (amount of cells in x direction) without the ghost cell frame
+    domain.domain_size_y = jmax; // global domain size y (amount of cells in y direction) without the ghost cell frame
 
     build_domain(domain, imax, jmax);
 
@@ -469,11 +469,64 @@ void Case::output_vtk(int file_number) {
     writer->Write();
 }
 
-void Case::build_domain(Domain &domain, int imax_domain, int jmax_domain) {
-    domain.imin = 0;
-    domain.jmin = 0;
-    domain.imax = imax_domain + 2;
-    domain.jmax = jmax_domain + 2;
-    domain.size_x = imax_domain;
-    domain.size_y = jmax_domain;
+void Case::build_domain(Domain &domain, int imax, int jmax) {
+    int rank;
+    int size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if(rank == 0){
+        // Only for even cell sizes
+        domain.size_x = floor(imax/iproc);
+        domain.size_y = floor(jmax/jproc);
+        domain.imin = 0;
+        domain.jmin = 0;
+        domain.imax = domain.imin + domain.size_x + 2;
+        domain.jmax = domain.jmin + domain.size_y + 2;
+
+        int imin_loc = 1;
+        int jmin_loc = 1;
+        int imax_loc;
+        int jmax_loc = jmin_loc + domain.size_y - 1;
+
+        int send_imin_loc;
+        int send_jmin_loc;
+        int send_imax_loc;
+        int send_jmax_loc;
+
+        //Send data of domain
+        for (int k = 1; k < jproc*iproc; k++){
+            MPI_Send(&domain.size_x, 1, MPI_INT, k, 1, MPI_COMM_WORLD);
+            MPI_Send(&domain.size_y, 1, MPI_INT, k, 2, MPI_COMM_WORLD);
+        
+            imin_loc += domain.size_x;
+            imax_loc = imin_loc + domain.size_x - 1;
+
+            if ((k%iproc) == 0){
+                imin_loc = 1;
+                imax_loc = imin_loc + domain.size_x - 1; //Reassigning because of imin_loc
+                jmin_loc += domain.size_y;
+                jmax_loc = jmin_loc + domain.size_y - 1;
+            }
+
+            send_imin_loc = imin_loc - 1;
+            send_jmin_loc = jmin_loc - 1;
+            send_imax_loc = imax_loc + 2;
+            send_jmax_loc = jmax_loc + 2;
+            
+            MPI_Send(&send_imin_loc, 1, MPI_INT, k, 3, MPI_COMM_WORLD);
+            MPI_Send(&send_jmin_loc, 1, MPI_INT, k, 4, MPI_COMM_WORLD);
+            MPI_Send(&send_imax_loc, 1, MPI_INT, k, 5, MPI_COMM_WORLD);
+            MPI_Send(&send_jmax_loc, 1, MPI_INT, k, 6, MPI_COMM_WORLD);
+        }
+
+    } else {
+        MPI_Recv(&domain.size_x, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.size_y, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.imin, 1, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.jmin, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.imax, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.jmax, 1, MPI_INT, 0, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
 }

@@ -61,6 +61,10 @@ class Case {
     double wall_vel_4;
     /// Wall (id 5) velocity
     double wall_vel_5;
+    /// Number of processes in x direction
+    int iproc{2};
+    /// Number of processes in y direction
+    int jproc{1};
 
     /// Simulation time
     double _t_end;
@@ -100,5 +104,5 @@ class Case {
      */
     void output_vtk(int my_rank);
 
-    void build_domain(Domain &domain, int imax_domain, int jmax_domain);
+    void build_domain(Domain &domain, int imax, int jmax);
 };
