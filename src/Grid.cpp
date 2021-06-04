@@ -55,25 +55,29 @@ void Grid::build_lid_driven_cavity() {
         }
     }
 
-    
-    // --------------- DEBUG: Printing grid ------------------------
+    /*
+    // --------------- DEBUG: Printing process data and grid ------------------------
     int rank;
     int size;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if(rank == 0){
-        for (int j = _domain.jmin; j < _domain.jmax; j++ ){
-            for (int i = _domain.imin; i < _domain.imax; i++) {
+        for (int j = 0 ; j < _domain.size_y + 2; j++ ){
+            for (int i = 0; i < _domain.size_x + 2; i++) {
                 std::cout << geometry_data.at(i).at(j) << " " ;
             }
             std::cout << "\n";
         }
     } else {
-        std::cout << "RANK " << rank << " " << _domain.imin <<  " " << _domain.imax << std::endl;
-        std::cout << "RANK " << rank << " " << _domain.jmin << " " << _domain.jmax << std::endl;
+        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  " " << _domain.imax << std::endl;
+        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << " " << _domain.jmax << std::endl;
+        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
+        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
+        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
+        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
     }
-
+    */
 
     assign_cell_types(geometry_data);
 }
@@ -88,7 +92,7 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
             i = 0;
         }
 
-        for (int i_geom = _domain.imin; i_geom < _domain.imax; ++i_geom) {
+        for (int i_geom = 0; i_geom <=  _domain.size_x + 1; ++i_geom) {
             if (geometry_data.at(i_geom).at(j_geom) == 0) {
                 _cells(i, j) = Cell(i, j, cell_type::FLUID);
                 _fluid_cells.push_back(&_cells(i, j));
@@ -303,15 +307,28 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
         }
     }
 
-    /*
-    // --------------- DEBUG: Printing grid ------------------------
-        for (int j = 0; j < _domain.size_y + 2; j++ ){
+    
+    // --------------- DEBUG: Printing process data and grid ------------------------
+    int rank;
+    int size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if(rank == 0){
+        for (int j = 0 ; j < _domain.size_y + 2; j++ ){
             for (int i = 0; i < _domain.size_x + 2; i++) {
-                std::cout << geometry_data.at(i).at(j) << " ";
+                std::cout << geometry_data.at(i).at(j) << " " ;
             }
             std::cout << "\n";
         }
-    */  
+    } else {
+        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  " " << _domain.imax << std::endl;
+        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << " " << _domain.jmax << std::endl;
+        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
+        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
+        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
+        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
+    }
 
     infile.close();
 }
