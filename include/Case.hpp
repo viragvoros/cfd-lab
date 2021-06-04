@@ -102,7 +102,7 @@ class Case {
      *
      * @param[in] Timestep of the solution
      */
-    void output_vtk(int my_rank);
+    void output_vtk(int file_number, int my_rank);
 
     void build_domain(Domain &domain, int imax, int jmax);
 };

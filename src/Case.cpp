@@ -137,7 +137,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
-        // std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp));
@@ -148,11 +147,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.fixed_wall_cells_5().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp));
     }
-    /* Skeleton, in case we need a 6th wall type
-    if (not _grid.fixed_wall_cells_6().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_6()));
-    }
-    */
     if (not _grid.inflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN));
     }
@@ -229,12 +223,15 @@ void Case::set_file_names(std::string file_name) {
  */
 void Case::simulate() {
 
-    // std::cout << "Entering simulate" << std::endl;
     double t = 0.0;
     double dt = _field.dt();
 
     // Used as input parameter for vtk file generation
     int output_counter = 0;
+
+    // Getting rank for vtk output name
+    int my_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     // Declare parameters for relative update calculation
     double previous_mean_u;
@@ -260,7 +257,6 @@ void Case::simulate() {
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
         }
 
         _field.calculate_temperature(_grid);
@@ -269,7 +265,6 @@ void Case::simulate() {
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
         }
 
         _field.calculate_rs(_grid);
@@ -278,7 +273,6 @@ void Case::simulate() {
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
             if (res <= _tolerance) {
-                //  std::cout << res << std::endl; // DEBUG
                 mean_p = res; // pressure relative update
                 break;
             }
@@ -286,58 +280,46 @@ void Case::simulate() {
         }
 
         if (nb_iter == _max_iter + 1) {
-            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\t"
-                      << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
+            if(my_rank == 0){
+                std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\t"
+                          << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
+            }
             SOR_fail_counter++;
         }
 
         _field.calculate_velocities(_grid);
 
-        /*
-        // DEBUG: Printig fields to console
-        std::cout << "---------------------- u field ------------------------------" << std::endl;
-        for (int jx = 0; jx < 22; jx++ ){
-            for (int ix = 0; ix < 73; ix++) {
-                std::cout << _field.u(ix, jx) << " " ;
-            }
-            std::cout << "\n";
-        }
-        std::cout << "---------------------- v field ------------------------------" << std::endl;
-        for (int jx = 0; jx < 22; jx++ ){
-            for (int ix = 0; ix < 73; ix++) {
-                std::cout << _field.v(ix, jx) << " " ;
-            }
-            std::cout << "\n";
-        }
-        */
-
         output_counter++;
         t = t + dt;
 
         if (output_counter == 20 || output_counter % 100 == 0) {
-            u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
-            v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
-            t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
-            std::cout << std::fixed;
-            std::cout << std::setprecision(5);
-            std::cout << "Time: " << t << "\t\t"
-                      << "dt: " << dt << "\t"
-                      << "SOR-Iter: " << nb_iter << "\t"
-                      << "U-Rel-Update: " << u_rel_update << "\t\t"
-                      << "V-Rel-Update: " << v_rel_update << "\t\t"
-                      << "P-Rel-Update: " << mean_p << "\t\t"
-                      << "T-Rel-Update: " << t_rel_update << std::endl;
-            output_vtk(output_counter);
+            if(my_rank == 0){
+                u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
+                v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
+                t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
+                std::cout << std::fixed;
+                std::cout << std::setprecision(5);
+                std::cout << "Time: " << t << "\t\t"
+                          << "dt: " << dt << "\t"
+                          << "SOR-Iter: " << nb_iter << "\t"
+                          << "U-Rel-Update: " << u_rel_update << "\t\t"
+                          << "V-Rel-Update: " << v_rel_update << "\t\t"
+                          << "P-Rel-Update: " << mean_p << "\t\t"
+                          << "T-Rel-Update: " << t_rel_update << std::endl;
+            }
+            output_vtk(output_counter, my_rank);
         }
     }
 
-    output_vtk(output_counter);
-    std::cout << "\nEnd of Simulation \n\nSimulation Report: "
-              << "End time: " << t << "\t || SOR Solver failed " << SOR_fail_counter
-              << " times. Check previous terminal information to find the corresponding timesteps." << std::endl;
+    output_vtk(output_counter, my_rank);
+    if(my_rank == 0){
+        std::cout << "\nEnd of Simulation \n\nSimulation Report: "
+                  << "End time: " << t << "\t || SOR Solver failed " << SOR_fail_counter
+                  << " times. Check previous terminal information to find the corresponding timesteps." << std::endl;
+    }
 }
 
-void Case::output_vtk(int file_number) {
+void Case::output_vtk(int file_number, int my_rank) {
     // Create a new structured grid
     vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
@@ -462,7 +444,7 @@ void Case::output_vtk(int file_number) {
     vtkSmartPointer<vtkStructuredGridWriter> writer = vtkSmartPointer<vtkStructuredGridWriter>::New();
 
     // Create Filename
-    std::string outputname = _dict_name + '/' + _case_name + "_" + std::to_string(file_number) + ".vtk";
+   std::string outputname = _dict_name + '/' + _case_name + "_" + std::to_string(my_rank) + "." + std::to_string(file_number) + ".vtk";
 
     writer->SetFileName(outputname.c_str());
     writer->SetInputData(structuredGrid);
