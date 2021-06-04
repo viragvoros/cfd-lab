@@ -19,6 +19,33 @@ Grid::Grid(std::string geom_name, Domain &domain) {
         parse_geometry_file(geom_name, geom_data);
         assign_cell_types(geom_data);
         geometry_data = geom_data;
+
+        
+        /*
+        // --------------- DEBUG: Printing grid and process domain data ------------------------
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if(rank == 0){            
+            for (int j = 0 ; j <= _domain.size_y + 1; j++ ){
+                for (int i = 0; i <= _domain.size_x + 1; i++) {
+                    if (_cells(i,j).type() == cell_type::FLUID_BUFFER) {
+                        std::cout << "x" << " " ;
+                    } else {
+                        std::cout << geometry_data.at(i).at(j) << " " ;
+                    }
+                }
+                std::cout << "\n";
+            }
+        } else {
+            std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  "-" << _domain.imax << std::endl;
+            std::cout << "J IN RANK " << rank << ": " << _domain.jmin << "-" << _domain.jmax << std::endl;
+            std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
+            std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
+            std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
+            std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
+        }
+        */
+
     } else {
         build_lid_driven_cavity();
     }
@@ -55,30 +82,6 @@ void Grid::build_lid_driven_cavity() {
         }
     }
 
-    /*
-    // --------------- DEBUG: Printing process data and grid ------------------------
-    int rank;
-    int size;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    if(rank == 0){
-        for (int j = 0 ; j < _domain.size_y + 2; j++ ){
-            for (int i = 0; i < _domain.size_x + 2; i++) {
-                std::cout << geometry_data.at(i).at(j) << " " ;
-            }
-            std::cout << "\n";
-        }
-    } else {
-        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  " " << _domain.imax << std::endl;
-        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << " " << _domain.jmax << std::endl;
-        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
-        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
-        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
-        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
-    }
-    */
-
     assign_cell_types(geometry_data);
 }
 
@@ -93,9 +96,9 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
         }
 
         for (int i_geom = 0; i_geom <=  _domain.size_x + 1; ++i_geom) {
-            if (geometry_data.at(i_geom).at(j_geom) == 0) {
-                _cells(i, j) = Cell(i, j, cell_type::FLUID);
-                _fluid_cells.push_back(&_cells(i, j));
+            if (geometry_data.at(i_geom).at(j_geom) == 0 && (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1)) {
+                _cells(i, j) = Cell(i, j, cell_type::FLUID_BUFFER);
+                _fluidbuffer_cells.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 8) {
                 _cells(i, j) = Cell(i, j, cell_type::MOVING_WALL, geometry_data.at(i_geom).at(j_geom));
                 _moving_wall_cells.push_back(&_cells(i, j));
@@ -115,11 +118,11 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
                 _cells(i, j) = Cell(i, j, cell_type::INFLOW, geometry_data.at(i_geom).at(j_geom));
                 _inflow_cells.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 2) {
-                    _cells(i, j) = Cell(i, j, cell_type::OUTFLOW, geometry_data.at(i_geom).at(j_geom));
-                    _outflow_cells.push_back(&_cells(i, j));
-            } else if (geometry_data.at(i_geom).at(j_geom) == 0 && (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1)) {
-                    _cells(i, j) = Cell(i, j, cell_type::FLUID_BUFFER, geometry_data.at(i_geom).at(j_geom));
-                    _fluidbuffer_cells.push_back(&_cells(i, j));
+                _cells(i, j) = Cell(i, j, cell_type::OUTFLOW, geometry_data.at(i_geom).at(j_geom));
+                _outflow_cells.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 0) {
+                _cells(i, j) = Cell(i, j, cell_type::FLUID, geometry_data.at(i_geom).at(j_geom));
+                _fluid_cells.push_back(&_cells(i, j));
             }
             ++i;
         }
@@ -306,30 +309,6 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
             geometry_data[row - _domain.imin][col - _domain.jmin] = array[row][col];
         }
     }
-
-    /*
-    // --------------- DEBUG: Printing process data and grid ------------------------
-    int rank;
-    int size;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    if(rank == 0){
-        for (int j = 0 ; j < _domain.size_y + 2; j++ ){
-            for (int i = 0; i < _domain.size_x + 2; i++) {
-                std::cout << geometry_data.at(i).at(j) << " " ;
-            }
-            std::cout << "\n";
-        }
-    } else {
-        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  " " << _domain.imax << std::endl;
-        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << " " << _domain.jmax << std::endl;
-        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
-        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
-        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
-        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
-    }
-    */
 
     infile.close();
 }
