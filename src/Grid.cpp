@@ -83,6 +83,32 @@ void Grid::build_lid_driven_cavity() {
     }
 
     assign_cell_types(geometry_data);
+
+    /*
+    // --------------- DEBUG: Printing grid and process domain data ------------------------
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if(rank == 0){            
+        for (int j = 0 ; j <= _domain.size_y + 1; j++ ){
+            for (int i = 0; i <= _domain.size_x + 1; i++) {
+                if (_cells(i,j).type() == cell_type::FLUID_BUFFER) {
+                    std::cout << "x" << " " ;
+                } else {
+                    std::cout << geometry_data.at(i).at(j) << " " ;
+                }
+            }
+            std::cout << "\n";
+        }
+    } else {
+        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  "-" << _domain.imax << std::endl;
+        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << "-" << _domain.jmax << std::endl;
+        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
+        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
+        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
+        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
+    }
+    */
+    
 }
 
 void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
@@ -120,7 +146,7 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
             } else if (geometry_data.at(i_geom).at(j_geom) == 2) {
                 _cells(i, j) = Cell(i, j, cell_type::OUTFLOW, geometry_data.at(i_geom).at(j_geom));
                 _outflow_cells.push_back(&_cells(i, j));
-            } else if (geometry_data.at(i_geom).at(j_geom) == 0) {
+            } else {
                 _cells(i, j) = Cell(i, j, cell_type::FLUID, geometry_data.at(i_geom).at(j_geom));
                 _fluid_cells.push_back(&_cells(i, j));
             }
