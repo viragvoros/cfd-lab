@@ -134,6 +134,8 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     build_domain(domain, imax, jmax);
 
+    // TODO create _communicate class
+
     _grid = Grid(_geom_name, domain);
     _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
                     PI, TI, energy_eq, GX, GY);
@@ -243,6 +245,10 @@ void Case::simulate() {
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
+    // Calculate local maximum for velocities
+    double local_max_v;
+    double local_max_u;
+
     // Declare parameters for relative update calculation
     double previous_mean_u;
     double previous_mean_v;
@@ -261,9 +267,6 @@ void Case::simulate() {
         previous_mean_v = _field.v_avg();
         previous_mean_t = _field.t_avg();
 
-        // Calculate optimum timestep
-        dt = _field.calculate_dt(_grid);
-
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
@@ -276,6 +279,7 @@ void Case::simulate() {
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
         }
+        // TODO communicate fluxes
 
         _field.calculate_rs(_grid);
 
@@ -298,6 +302,16 @@ void Case::simulate() {
         }
 
         _field.calculate_velocities(_grid);
+        // TODO communicate velocities
+
+        local_max_u = _field.find_max(_field.u_matrix());
+        local_max_v = _field.find_max(_field.v_matrix());
+
+        MPI_Allreduce(MPI_IN_PLACE, &local_max_u, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE, &local_max_v, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+        // Calculate optimum timestep
+        dt = _field.calculate_dt(_grid, local_max_u, local_max_v);
 
         output_counter++;
         t = t + dt;

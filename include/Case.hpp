@@ -10,6 +10,7 @@
 #include "Fields.hpp"
 #include "Grid.hpp"
 #include "PressureSolver.hpp"
+#include "Communication.hpp"
 
 /**
  * @brief Class to hold and orchestrate the simulation flow.
@@ -71,6 +72,7 @@ class Case {
     /// Solution file outputting frequency
     double _output_freq;
 
+    Communication _communication;
     Fields _field;
     Grid _grid;
     Discretization _discretization;
