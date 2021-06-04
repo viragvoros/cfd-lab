@@ -307,7 +307,7 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
         }
     }
 
-    
+    /*
     // --------------- DEBUG: Printing process data and grid ------------------------
     int rank;
     int size;
@@ -329,6 +329,7 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
         std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
         std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
     }
+    */
 
     infile.close();
 }
