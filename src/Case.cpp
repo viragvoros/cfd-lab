@@ -98,6 +98,16 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     file.close();
 
+    if((imax%iproc) != 0 or (jmax%jproc) != 0){
+        int error_rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &error_rank);
+        if(error_rank == 0){  
+            std::cout << " UNEVEN DOMAIN DIVISION." << std::endl;
+            std::cout << " PLEASE CHOOSE VALUES CORRESPONDING TO imax % iproc = 0 and jmax % jproc = 0." << std::endl;
+        }
+        exit(1);
+    }
+
     std::map<int, double> wall_vel;
     std::map<int, double> wall_temp;
     if (_geom_name.compare("NONE") == 0) {
