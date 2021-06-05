@@ -12,38 +12,37 @@ if (jproc != 1) {
     //----------------------------------------------------------------
     // From BOTTOM rank to TOP rank
     //----------------------------------------------------------------
-    // Copy data to send the Top non-ghost layer of Matrix A
+    // Initialize buffers to send and receive data
     double send_tb_x[domain.size_x + 2];
     double receive_tb_x[domain.size_x + 2];
 
-    // store topmost row not being ghost layer
+    // Store topmost row of domain in send-buffer
     for (int i = 0; i < domain.size_x + 2; i++) {
         send_tb_x[i] = A(i, domain.size_y);
     }
 
     int dest_tb_rank, source_tb_rank;
 
-    // Find source rank (BOTTOM to current rank)
-    if (own_rank >= iproc) { // Rank = -1 is not existent
-        source_tb_rank = own_rank - iproc;
-    }
-
     // Find destination rank (TOP to current rank)
     if (own_rank < iproc * jproc - iproc) { // Rank < MaxRank  is not existent
         dest_tb_rank = own_rank + iproc;
     }
 
+    // Find source rank (BOTTOM to current rank)
+    if (own_rank >= iproc) { // Negative ranks do not exist
+        source_tb_rank = own_rank - iproc;
+    }
 
     // Exchange data
-    if (own_rank < iproc) {// sender
+    if (own_rank < iproc) { // SEND
         MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, dest_tb_rank, 0,
                      &receive_tb_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if ((own_rank + iproc) >= (iproc * jproc)) {  // receiver
+    } else if ((own_rank + iproc) >= (iproc * jproc)) { // RECEIVE
         MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_tb_x, domain.size_x + 2, MPI_DOUBLE, source_tb_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for (int i = 0; i < domain.size_x + 2; i++) {
             A(i, 0) = receive_tb_x[i];
         }
@@ -53,30 +52,20 @@ if (jproc != 1) {
                      &receive_tb_x, domain.size_x + 2, MPI_DOUBLE, source_tb_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for (int i = 0; i < domain.size_x + 2; i++) {
             A(i, 0) = receive_tb_x[i];
         }
     }
-
-
-    /*
-    // Copy data from receive into Matrix A BOTTOM ghost layer
-    if ((own_rank+1)%iproc != 0){    //prevent non receivers to get bullshit
-        for (int i = 0; i < domain.size_x + 2; i++) {
-            A(i, 0) = receive_tb_x[i];
-        }
-    }
-    */
 
     //----------------------------------------------------------------
     // From TOP rank to BOTTOM rank
     //----------------------------------------------------------------
-    // Copy data to send the Bottom non-ghost layer of Matrix A
+    // Initialize buffers to send and receive data
     double send_bt_x[domain.size_x + 2];
     double receive_bt_x[domain.size_x + 2];
 
-    // store bottommost row not being ghost layer
+    // Store bottommost row of domain in send-buffer
     for (int i = 0; i < domain.size_x + 2; i++) {
         send_bt_x[i] = A(i, 1);
     }
@@ -88,23 +77,22 @@ if (jproc != 1) {
         dest_bt_rank = own_rank - iproc;
     }
 
-    // Find sender rank (TOP to current rank)
+    // Find source rank (TOP to current rank)
     if (own_rank < iproc * jproc - iproc) { // Rank < MaxRank  is not existent
         source_bt_rank = own_rank + iproc;
     }
 
-
     // Exchange data
-    if ((own_rank + iproc) >= (iproc * jproc)) { // sender
+    if ((own_rank + iproc) >= (iproc * jproc)) { // SEND
         MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, dest_bt_rank, 0,
                      &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (own_rank < iproc) { // receiver
+    } else if (own_rank < iproc) { // RECEIVE
         MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, source_bt_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
 
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for (int i = 0; i < domain.size_x + 2; i++) {
             A(i, domain.size_y + 1) = receive_bt_x[i];
         }
@@ -114,33 +102,23 @@ if (jproc != 1) {
                      &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, source_bt_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for (int i = 0; i < domain.size_x + 2; i++) {
             A(i, domain.size_y + 1) = receive_bt_x[i];
         }
     }
-
-
-    /*
-    // Copy data from receive into Matrix A TOP ghost layer
-    if ((own_rank+1)%iproc != 0){    //prevent non receivers to get bullshit
-        for (int i = 0; i < domain.size_x + 2; i++) {
-            A(i, domain.size_y + 1) = receive_bt_x[i];
-        }
-    }
-    */
 }
-//std::cout << "hello" << std::endl;
+
 
 if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     //----------------------------------------------------------------
     // From RIGHT rank to LEFT rank
     //----------------------------------------------------------------
-    // Copy data to send the LEFT non-ghost layer of Matrix A
+    // Initialize buffers to send and receive data
     double send_lr_y[domain.size_y + 2];
     double receive_lr_y[domain.size_y + 2];
 
-    // store leftmost column not being ghost layer
+    // Store leftmost column of domain in send-buffer
     for(int i = 0; i < domain.size_y + 2; i++){
         send_lr_y[i] = A(1, i);
     }
@@ -148,7 +126,7 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     int dest_lr_rank, source_lr_rank;
 
     // Find destination rank (LEFT to current rank)
-    if (own_rank%iproc != 0) { // Rank = -1 is not existent
+    if (own_rank%iproc != 0) { // Ranks on LEFT edge have no LEFT neighbor
         dest_lr_rank = own_rank - 1;
     }
 
@@ -159,37 +137,27 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
 
 
     // Exchange data
-    if ((own_rank+1)%iproc == 0){ // sender
+    if ((own_rank+1)%iproc == 0){ // SEND
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2, MPI_DOUBLE, dest_lr_rank, 0,
                      &receive_lr_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (own_rank%iproc == 0){ // receiver
+    } else if (own_rank%iproc == 0){ // RECEIVE
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_lr_y, domain.size_y + 2 , MPI_DOUBLE, source_lr_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for(int i = 0; i < domain.size_y + 2 ; i++){
             A(domain.size_x + 1, i ) = receive_lr_y[i];
         }
 
-    } else { //MIDDLE: SEND and RECEIVE
+    } else { // MIDDLE: SEND and RECEIVE
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2 , MPI_DOUBLE, dest_lr_rank, 0,
                      &receive_lr_y, domain.size_y + 2 , MPI_DOUBLE, source_lr_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for(int i = 0; i < domain.size_y + 2 ; i++){
             A(domain.size_x + 1, i ) = receive_lr_y[i];
         }
     }
-
-
-    /*
-    // Copy data from receive into Matrix A Right ghost layer
-    if ((own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
-        for(int i = 0; i < domain.size_y + 2 ; i++){
-            A(domain.size_x + 1, i ) = receive_lr_y[i];
-        }
-    }
-    */
 
                 //if (own_rank == 0){
                 //
@@ -214,11 +182,11 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     //----------------------------------------------------------------
     // From LEFT rank to RIGHT rank
     //----------------------------------------------------------------
-    // Copy data to send the RIGHT non-ghost layer of Matrix A
+    // Initialize buffers to send and receive data
     double send_rl_y[domain.size_y + 2];
     double receive_rl_y[domain.size_y + 2];
 
-    // store rightmost column not being ghost layer
+    // Store rightmost column of domain in send-buffer
     for (int i = 0; i < domain.size_y + 2; i++) {
         send_rl_y[i] = A(domain.size_x, i);
     }
@@ -231,41 +199,32 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     }
 
     // Find source rank (LEFT to current rank)
-    if (own_rank != 0 ) { // Rank = -1  does not existent
+    if (own_rank != 0 ) { // Ranks on LEFT edge have no LEFT neighbor
         source_rl_rank = own_rank - 1;
     }
 
     // Exchange data
-    if ((own_rank+1)%iproc == 0){ // receiver
+    if ((own_rank+1)%iproc == 0){ // RECEIVE
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, source_rl_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for(int i = 0; i < domain.size_y + 2; i++){
             A(0, i) = receive_rl_y[i];
         }
 
-    } else if (own_rank%iproc == 0){ // sender
+    } else if (own_rank%iproc == 0){ // SEND
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, dest_rl_rank, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else { //MIDDLE: SEND and RECEIVE
+    } else { // MIDDLE: SEND and RECEIVE
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, dest_rl_rank, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, source_rl_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        // TODO: MAYBE REMOVE LATER
+        // Update matrix with data from receive-buffer
         for(int i = 0; i < domain.size_y + 2; i++){
             A(0, i) = receive_rl_y[i];
         }     
     }
-
-    /*
-    // Copy data from receive into Matrix A TOP ghost layer
-    if (own_rank%iproc != 0){//prevent senders from receiving
-        for(int i = 0; i < domain.size_y + 2; i++){
-            A(0, i) = receive_rl_y[i];
-        }
-    }
-    */
 }
 
 
