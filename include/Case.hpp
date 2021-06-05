@@ -64,7 +64,7 @@ class Case {
     /// Wall (id 5) velocity
     double wall_vel_5;
     /// Number of processes in x direction
-    int iproc{1};
+    int iproc{2};
     /// Number of processes in y direction
     int jproc{2};
 

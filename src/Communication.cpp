@@ -23,12 +23,12 @@ if (jproc != 1) {
 
     int dest_tb_rank, source_tb_rank;
 
-    // Find destination rank (TOP to current rank)
+    // Find source rank (BOTTOM to current rank)
     if (own_rank >= iproc) { // Rank = -1 is not existent
         source_tb_rank = own_rank - iproc;
     }
 
-    // Find sender rank (BOTTOM to current rank)
+    // Find destination rank (TOP to current rank)
     if (own_rank < iproc * jproc - iproc) { // Rank < MaxRank  is not existent
         dest_tb_rank = own_rank + iproc;
     }
@@ -42,19 +42,32 @@ if (jproc != 1) {
         MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_tb_x, domain.size_x + 2, MPI_DOUBLE, source_tb_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
-    } else { //MIDDLE: SEND and RECEIVE
+
+        // TODO: MAYBE REMOVE LATER
+        for (int i = 0; i < domain.size_x + 2; i++) {
+            A(i, 0) = receive_tb_x[i];
+        }
+        
+    } else { // MIDDLE: SEND and RECEIVE
         MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, dest_tb_rank, 0,
                      &receive_tb_x, domain.size_x + 2, MPI_DOUBLE, source_tb_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
-    }
 
-
-    // Copy data from receive into Matrix A BOTTOM ghost layer
-    if (own_rank > iproc) { //(own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
+        // TODO: MAYBE REMOVE LATER
         for (int i = 0; i < domain.size_x + 2; i++) {
             A(i, 0) = receive_tb_x[i];
         }
     }
+
+
+    /*
+    // Copy data from receive into Matrix A BOTTOM ghost layer
+    if ((own_rank+1)%iproc != 0){    //prevent non receivers to get bullshit
+        for (int i = 0; i < domain.size_x + 2; i++) {
+            A(i, 0) = receive_tb_x[i];
+        }
+    }
+    */
 
     //----------------------------------------------------------------
     // Sender column: BOTTOM. Receiver column: TOP
@@ -77,7 +90,7 @@ if (jproc != 1) {
 
     // Find sender rank (TOP to current rank)
     if (own_rank < iproc * jproc - iproc) { // Rank < MaxRank  is not existent
-        source_bt_rank = own_rank + 1;
+        source_bt_rank = own_rank + iproc;
     }
 
 
@@ -89,19 +102,33 @@ if (jproc != 1) {
         MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, source_bt_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
-    } else { //MIDDLE: SEND and RECEIVE
+
+
+        // TODO: MAYBE REMOVE LATER
+        for (int i = 0; i < domain.size_x + 2; i++) {
+            A(i, domain.size_y + 1) = receive_bt_x[i];
+        }
+
+    } else { // MIDDLE: SEND and RECEIVE
         MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, dest_bt_rank, 0,
                      &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, source_bt_rank, 0, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
-    }
 
-
-    // Copy data from receive into Matrix A TOP ghost layer
-    if (own_rank == 0) { //(own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
+        // TODO: MAYBE REMOVE LATER
         for (int i = 0; i < domain.size_x + 2; i++) {
             A(i, domain.size_y + 1) = receive_bt_x[i];
         }
     }
+
+
+    /*
+    // Copy data from receive into Matrix A TOP ghost layer
+    if ((own_rank+1)%iproc != 0){    //prevent non receivers to get bullshit
+        for (int i = 0; i < domain.size_x + 2; i++) {
+            A(i, domain.size_y + 1) = receive_bt_x[i];
+        }
+    }
+    */
 }
 //std::cout << "hello" << std::endl;
 
@@ -138,18 +165,31 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     } else if (own_rank%iproc == 0){ // receiver
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_lr_y, domain.size_y + 2 , MPI_DOUBLE, source_lr_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // TODO: MAYBE REMOVE LATER
+        for(int i = 0; i < domain.size_y + 2 ; i++){
+            A(domain.size_x + 1, i ) = receive_lr_y[i];
+        }
+
     } else { //MIDDLE: SEND and RECEIVE
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2 , MPI_DOUBLE, dest_lr_rank, 0,
                      &receive_lr_y, domain.size_y + 2 , MPI_DOUBLE, source_lr_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // TODO: MAYBE REMOVE LATER
+        for(int i = 0; i < domain.size_y + 2 ; i++){
+            A(domain.size_x + 1, i ) = receive_lr_y[i];
+        }
     }
 
 
+    /*
     // Copy data from receive into Matrix A Right ghost layer
     if ((own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
         for(int i = 0; i < domain.size_y + 2 ; i++){
             A(domain.size_x + 1, i ) = receive_lr_y[i];
         }
     }
+    */
 
                 //if (own_rank == 0){
                 //
@@ -199,20 +239,33 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     if ((own_rank+1)%iproc == 0){ // receiver
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, source_rl_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (own_rank%iproc == 0){ //sender
+
+        // TODO: MAYBE REMOVE LATER
+        for(int i = 0; i < domain.size_y + 2; i++){
+            A(0, i) = receive_rl_y[i];
+        }
+
+    } else if (own_rank%iproc == 0){ // sender
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, dest_rl_rank, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     } else { //MIDDLE: SEND and RECEIVE
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, dest_rl_rank, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, source_rl_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // TODO: MAYBE REMOVE LATER
+        for(int i = 0; i < domain.size_y + 2; i++){
+            A(0, i) = receive_rl_y[i];
+        }     
     }
 
+    /*
     // Copy data from receive into Matrix A TOP ghost layer
     if (own_rank%iproc != 0){//prevent senders from receiving
         for(int i = 0; i < domain.size_y + 2; i++){
             A(0, i) = receive_rl_y[i];
         }
     }
+    */
 }
 
 

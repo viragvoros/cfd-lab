@@ -330,6 +330,8 @@ void Case::simulate() {
         output_counter++;
         t = t + dt;
 
+        // TODO: MPI_Allreduce on all printed variables
+
         if (output_counter == 20 || output_counter % 100 == 0) {
             if(my_rank == 0){
                 u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
