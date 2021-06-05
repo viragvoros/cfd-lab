@@ -51,32 +51,32 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
 
     int dest_tb_rank, source_tb_rank;
 
-//    // Find destination rank (TOP to current rank)
-//    if (own_rank >= iproc) { // Rank = -1 is not existent
-//        dest_tb_rank = own_rank - iproc;
-//    }
-//
-//    // Find sender rank (BOTTOM to current rank)
-//    if (own_rank < iproc*jproc - iproc ) { // Rank < MaxRank  is not existent
-//        source_tb_rank = own_rank + 1;
-//    }
+    // Find destination rank (TOP to current rank)
+    if (own_rank >= iproc) { // Rank = -1 is not existent
+        source_tb_rank = own_rank - iproc;
+    }
+
+    // Find sender rank (BOTTOM to current rank)
+    if (own_rank < iproc*jproc - iproc ) { // Rank < MaxRank  is not existent
+        dest_tb_rank = own_rank + iproc;
+    }
 
 
     // Exchange data
-    if (own_rank == 0){//(own_rank + iproc) >= (iproc * jproc)){ // sender
-        MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, 1, 0,
+    if (own_rank < iproc){// sender
+        MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, dest_tb_rank, 0,
                      &receive_tb_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (own_rank == 1){// < iproc){ // receiver
+    } else if ((own_rank + iproc) >= (iproc * jproc)){  // receiver
         MPI_Sendrecv(&send_tb_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
-                     &receive_tb_x, domain.size_x + 2 , MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                     &receive_tb_x, domain.size_x + 2 , MPI_DOUBLE, source_tb_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     } else { //MIDDLE: SEND and RECEIVE
-        MPI_Sendrecv(&send_tb_x, domain.size_x + 2 , MPI_DOUBLE, 1, 0,
-                     &receive_tb_x, domain.size_x + 2 , MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Sendrecv(&send_tb_x, domain.size_x + 2 , MPI_DOUBLE, dest_tb_rank, 0,
+                     &receive_tb_x, domain.size_x + 2 , MPI_DOUBLE, source_tb_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
 
     // Copy data from receive into Matrix A BOTTOM ghost layer
-    if (own_rank == 1){ //(own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
+    if (own_rank > iproc){ //(own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
         for(int i = 0; i < domain.size_x + 2 ; i++){
             A(i, 0) = receive_tb_x[i];
         }
@@ -96,27 +96,27 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
 
     int dest_bt_rank, source_bt_rank;
 
-//    // Find destination rank (BOTTOM to current rank)
-//    if (own_rank >= iproc) { // Rank = -1 is not existent
-//        dest_bt_rank = own_rank - iproc;
-//    }
-//
-//    // Find sender rank (TOP to current rank)
-//    if (own_rank < iproc*jproc - iproc ) { // Rank < MaxRank  is not existent
-//        source_bt_rank = own_rank + 1;
-//    }
+    // Find destination rank (BOTTOM to current rank)
+    if (own_rank >= iproc) { // Rank = -1 is not existent
+        dest_bt_rank = own_rank - iproc;
+    }
+
+    // Find sender rank (TOP to current rank)
+    if (own_rank < iproc*jproc - iproc ) { // Rank < MaxRank  is not existent
+        source_bt_rank = own_rank + 1;
+    }
 
 
     // Exchange data
-    if (own_rank == 1){//(own_rank + iproc) >= (iproc * jproc)){ // sender
-        MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, 0, 0,
+    if ((own_rank + iproc) >= (iproc * jproc)){ // sender
+        MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, dest_bt_rank, 0,
                      &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (own_rank == 0){// < iproc){ // receiver
+    } else if (own_rank < iproc){ // receiver
         MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
-                     &receive_bt_x, domain.size_x + 2 , MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                     &receive_bt_x, domain.size_x + 2 , MPI_DOUBLE, source_bt_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     } else { //MIDDLE: SEND and RECEIVE
-        MPI_Sendrecv(&send_bt_x, domain.size_x + 2 , MPI_DOUBLE, 0, 0,
-                     &receive_bt_x, domain.size_x + 2 , MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Sendrecv(&send_bt_x, domain.size_x + 2 , MPI_DOUBLE, dest_bt_rank, 0,
+                     &receive_bt_x, domain.size_x + 2 , MPI_DOUBLE, source_bt_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
 
