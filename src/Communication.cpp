@@ -37,35 +37,51 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
 //        A(i, 0) = receive_tb_y[i];
 //    }
 //
-//    //----------------------------------------------------------------
-//    // SEND TO BOTTOM, RECEIVE FROM TOP
-//    //----------------------------------------------------------------
-//    double send_bt_y[domain.size_y + 2];
-//    double receive_bt_y[domain.size_y + 2];
-//    // Copy data to send the BOTTOM non-ghost layer of Matrix A
+//----------------------------------------------------------------
+    // Sender column: BOTTOM. Receiver column: TOP
+    //----------------------------------------------------------------
+    // Copy data to send the Bottom non-ghost layer of Matrix A
+//    double send_bt_x[domain.size_x + 2];
+//    double receive_bt_x[domain.size_x + 2];
+//
+//    // store bottommost row not being ghost layer
 //    for(int i = 0; i < domain.size_x + 2; i++){
-//        send_bt_y[i] = A(i, 1);
+//        send_bt_x[i] = A(i, 1);
 //    }
-//    // Find destination rank (TOP to current rank)
-//    dest_rank = own_rank - iproc;
-//    // Find source rank (BOTTOM to current rank)
-//    source_rank = own_rank + iproc;
+//
+//    int dest_bt_rank, source_bt_rank;
+//
+////    // Find destination rank (BOTTOM to current rank)
+////    if (own_rank >= iproc) { // Rank = -1 is not existent
+////        dest_bt_rank = own_rank - iproc;
+////    }
+////
+////    // Find sender rank (TOP to current rank)
+////    if (own_rank < iproc*jproc - iproc ) { // Rank < MaxRank  is not existent
+////        source_bt_rank = own_rank + 1;
+////    }
+//
+//
 //    // Exchange data
-//    if ((own_rank + iproc) >= (iproc * jproc)){ // TOP ROW: ONLY SEND
-//        MPI_Sendrecv(&send_bt_y, domain.size_y + 2, MPI_DOUBLE, dest_rank, 0,
-//                     &receive_bt_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//    } else if (own_rank < iproc){ //BOTTOM ROW: ONLY RECEIVE
-//        MPI_Sendrecv(&send_bt_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
-//                     &receive_bt_y, domain.size_y + 2, MPI_DOUBLE, source_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//    if (own_rank == 1){//(own_rank + iproc) >= (iproc * jproc)){ // sender
+//        MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, 0, 0,
+//                     &receive_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//    } else if (own_rank == 0){// < iproc){ // receiver
+//        MPI_Sendrecv(&send_bt_x, domain.size_x + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
+//                     &receive_bt_x, domain.size_x + 2 , MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 //    } else { //MIDDLE: SEND and RECEIVE
-//        MPI_Sendrecv(&send_bt_y, domain.size_y + 2, MPI_DOUBLE, dest_rank, 0,
-//                     &receive_bt_y, domain.size_y + 2, MPI_DOUBLE, source_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//        MPI_Sendrecv(&send_bt_x, domain.size_x + 2 , MPI_DOUBLE, 0, 0,
+//                     &receive_bt_x, domain.size_x + 2 , MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 //    }
+//
+//
 //    // Copy data from receive into Matrix A TOP ghost layer
-//    for(int i = 0; i < domain.size_x + 2; i++){
-//        A(i, domain.size_y + 1) = receive_bt_y[i];
+//    if (own_rank == 0){ //(own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
+//        for(int i = 0; i < domain.size_x + 2 ; i++){
+//            A(i, domain.size_y + 1 ) = receive_bt_x[i];
+//        }
 //    }
-
+//std::cout << "hello" << std::endl;
     //----------------------------------------------------------------
     // Sender column: LEFT. Receiver column: RIGHT
     //----------------------------------------------------------------
@@ -92,10 +108,10 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
 
 
     // Exchange data
-    if (own_rank == 1){ // LEFT COL: ONLY SEND
+    if ((own_rank+1)%iproc == 0){ // sender
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2, MPI_DOUBLE, dest_lr_rank, 0,
                      &receive_lr_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (own_rank == 0){ //RIGHT COL: ONLY RECEIVE
+    } else if (own_rank%iproc == 0){ // receiver
         MPI_Sendrecv(&send_lr_y, domain.size_y + 2, MPI_DOUBLE, MPI_PROC_NULL, 0,
                      &receive_lr_y, domain.size_y + 2 , MPI_DOUBLE, source_lr_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     } else { //MIDDLE: SEND and RECEIVE
@@ -104,41 +120,35 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
     }
 
 
-//    std::cout << A.jmax() << std::endl;
-
     // Copy data from receive into Matrix A Right ghost layer
-    if (own_rank == 0){
+    if ((own_rank+1)%iproc != 0){//prevent non receivers to get bullshit
         for(int i = 0; i < domain.size_y + 2 ; i++){
             A(domain.size_x + 1, i ) = receive_lr_y[i];
-            //std::cout << i << std::endl;
-//        if (own_rank == 1) {
-//            std::cout << i;
-//        }
         }
     }
 
-//if (own_rank == 0){
-//
-//    std::cout << "------------------Array --------------------\n" << std::endl;
-//
-//    for (int j = 0 ; j <= domain.size_y + 1; j++ ){
-////        for (int i = 0; i <= domain.size_x + 1; i++) {
-////
-////            std::cout << A(i,j) << " " ;
-////
-////        }
-////        std::cout << "\n";
-//        std::cout << receive_lr_y[j] << " ";
-//
-//
-//    }
-//    std::cout << "End of array\n" << std::endl;
-//}
+                //if (own_rank == 0){
+                //
+                //    std::cout << "------------------Array --------------------\n" << std::endl;
+                //
+                //    for (int j = 0 ; j <= domain.size_y + 1; j++ ){
+                ////        for (int i = 0; i <= domain.size_x + 1; i++) {
+                ////
+                ////            std::cout << A(i,j) << " " ;
+                ////
+                ////        }
+                ////        std::cout << "\n";
+                //        std::cout << receive_lr_y[j] << " ";
+                //
+                //
+                //    }
+                //    std::cout << "End of array\n" << std::endl;
+                //}
 
 
 
     //----------------------------------------------------------------
-    // SEND TO RIGHT, RECEIVE FROM LEFT
+    // FROM RIGHT TO LEFT
     //----------------------------------------------------------------
     // Copy data to send the RIGHT non-ghost layer of Matrix A
     double send_rl_y[domain.size_y + 2];
@@ -149,39 +159,36 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
             send_rl_y[i] = A(domain.size_x, i);
         }
 
-    //std::cout << "domain.size_y + 2 + 2 :" << domain.size_y + 2 + 2  << std::endl;
+    int dest_rl_rank, source_rl_rank;
 
+    // Find destination rank (RIGHT to current rank)
+    if (own_rank != iproc*jproc -1 ) { // Rank < MaxRank  is not existent
+        dest_rl_rank = own_rank + 1;
+    }
 
-//    // Find destination rank (LEFT to current rank)
-//        int dest_rank_rl = own_rank - 1;
-//
-//    // Find source rank (RIGHT to current rank)
-//        int source_rank_rl = own_rank + 1;
+    // Find source rank (LEFT to current rank)
+    if (own_rank != 0 ) { // Rank = -1  does not existent
+        source_rl_rank = own_rank - 1;
+    }
 
     // Exchange data
-    if (own_rank == 1){ // LEFT COL: ONLY RECEIVE
+    if ((own_rank+1)%iproc == 0){ // receiver
         MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, MPI_PROC_NULL, 0,
-                     &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        //std::cout << "receiving" << std::endl;
-    } else if (own_rank == 0){ //RIGHT COL: ONLY SEND
-        MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, 1, 0,
+                     &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, source_rl_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    } else if (own_rank%iproc == 0){ //sender
+        MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, dest_rl_rank, 0,
                      &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, MPI_PROC_NULL, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-       // std::cout << "sending" << std::endl;;
     } else { //MIDDLE: SEND and RECEIVE
-        MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, 1, 0,
-                     &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout << "both" << std::endl;;
+        MPI_Sendrecv(&send_rl_y, domain.size_y + 2 , MPI_DOUBLE, dest_rl_rank, 0,
+                     &receive_rl_y, domain.size_y + 2 , MPI_DOUBLE, source_rl_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
+
     // Copy data from receive into Matrix A TOP ghost layer
-    if (own_rank == 1){
+    if (own_rank%iproc != 0){//prevent senders from receiving
         for(int i = 0; i < domain.size_y + 2; i++){
             A(0, i) = receive_rl_y[i];
         }
     }
-
-
-
-
 
 }
 
