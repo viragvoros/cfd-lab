@@ -11,6 +11,7 @@
 #include "Grid.hpp"
 #include "PressureSolver.hpp"
 #include "Communication.hpp"
+#include "Domain.hpp"
 
 /**
  * @brief Class to hold and orchestrate the simulation flow.
@@ -76,6 +77,7 @@ class Case {
     Fields _field;
     Grid _grid;
     Discretization _discretization;
+    Domain domain;
     std::unique_ptr<PressureSolver> _pressure_solver;
     std::vector<std::unique_ptr<Boundary>> _boundaries;
 

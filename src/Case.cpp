@@ -126,7 +126,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     set_file_names(file_name);
 
     // Build up the domain
-    Domain domain;
+    //Domain domain;
     domain.dx = xlength / (double)imax; // physical length of one cell
     domain.dy = ylength / (double)jmax;
     domain.domain_size_x = imax; // global domain size x (amount of cells in x direction) without the ghost cell frame
@@ -135,6 +135,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     // TODO create _communicate class
+    //Communication communication;
 
     _grid = Grid(_geom_name, domain);
     _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
@@ -275,17 +276,28 @@ void Case::simulate() {
         _field.calculate_temperature(_grid);
 
         _field.calculate_fluxes(_grid);
+
+
+
+//        for(int i = 0; i < domain.size_x + 2; i++){
+//            std::cout << _field.f_matrix(i,0) << std::endl;
+//        }
+
+
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
         }
         // TODO communicate fluxes
+        _communication.communicate(_field.f_matrix(), domain, iproc, jproc);
+        _communication.communicate(_field.g_matrix(), domain, iproc, jproc);
 
         _field.calculate_rs(_grid);
 
         int nb_iter = 0;
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
+            _communication.communicate(_field.p_matrix(), domain, iproc, jproc);
             if (res <= _tolerance) {
                 mean_p = res; // pressure relative update
                 break;
@@ -302,7 +314,9 @@ void Case::simulate() {
         }
 
         _field.calculate_velocities(_grid);
-        // TODO communicate velocities
+
+        _communication.communicate(_field.u_matrix(), domain, iproc, jproc);
+        _communication.communicate(_field.v_matrix(), domain, iproc, jproc);
 
         local_max_u = _field.find_max(_field.u_matrix());
         local_max_v = _field.find_max(_field.v_matrix());

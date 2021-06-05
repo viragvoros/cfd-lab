@@ -144,6 +144,12 @@ class Fields {
     /// v velocity matrix access and modify
     Matrix<double> &v_matrix();
 
+    /// f velocity matrix access and modify
+    Matrix<double> &f_matrix();
+
+    /// g velocity matrix access and modify
+    Matrix<double> &g_matrix();
+
   private:
     /// x-velocity matrix
     Matrix<double> _U;
@@ -176,6 +182,7 @@ class Fields {
     double _alpha;
     /// thermal expansion coefficient
     double _beta;
+
     /// fluid cells
     std::vector<Cell *> _cells;
     /// Heat energy on
