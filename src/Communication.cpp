@@ -10,7 +10,7 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
 
 if (jproc != 1) {
     //----------------------------------------------------------------
-    // Sender column: TOP. Receiver column: BOTTOM
+    // From BOTTOM rank to TOP rank
     //----------------------------------------------------------------
     // Copy data to send the Top non-ghost layer of Matrix A
     double send_tb_x[domain.size_x + 2];
@@ -70,7 +70,7 @@ if (jproc != 1) {
     */
 
     //----------------------------------------------------------------
-    // Sender column: BOTTOM. Receiver column: TOP
+    // From TOP rank to BOTTOM rank
     //----------------------------------------------------------------
     // Copy data to send the Bottom non-ghost layer of Matrix A
     double send_bt_x[domain.size_x + 2];
@@ -134,13 +134,13 @@ if (jproc != 1) {
 
 if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
     //----------------------------------------------------------------
-    // Sender column: LEFT. Receiver column: RIGHT
+    // From RIGHT rank to LEFT rank
     //----------------------------------------------------------------
     // Copy data to send the LEFT non-ghost layer of Matrix A
     double send_lr_y[domain.size_y + 2];
     double receive_lr_y[domain.size_y + 2];
 
-    // store column leftmost, not ghost into send
+    // store leftmost column not being ghost layer
     for(int i = 0; i < domain.size_y + 2; i++){
         send_lr_y[i] = A(1, i);
     }
@@ -212,16 +212,16 @@ if ( iproc != 1){//(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
 
 
     //----------------------------------------------------------------
-    // FROM RIGHT TO LEFT
+    // From LEFT rank to RIGHT rank
     //----------------------------------------------------------------
     // Copy data to send the RIGHT non-ghost layer of Matrix A
     double send_rl_y[domain.size_y + 2];
     double receive_rl_y[domain.size_y + 2];
 
-
-        for (int i = 0; i < domain.size_y + 2; i++) {
-            send_rl_y[i] = A(domain.size_x, i);
-        }
+    // store rightmost column not being ghost layer
+    for (int i = 0; i < domain.size_y + 2; i++) {
+        send_rl_y[i] = A(domain.size_x, i);
+    }
 
     int dest_rl_rank, source_rl_rank;
 
