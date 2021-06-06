@@ -1,6 +1,6 @@
 #include <iostream>
-#include <string>
 #include <mpi.h>
+#include <string>
 
 #include "Case.hpp"
 

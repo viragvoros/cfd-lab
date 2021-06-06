@@ -5,13 +5,12 @@
 #include <vector>
 
 #include "Boundary.hpp"
+#include "Communication.hpp"
 #include "Discretization.hpp"
 #include "Domain.hpp"
 #include "Fields.hpp"
 #include "Grid.hpp"
 #include "PressureSolver.hpp"
-#include "Communication.hpp"
-#include "Domain.hpp"
 
 /**
  * @brief Class to hold and orchestrate the simulation flow.
