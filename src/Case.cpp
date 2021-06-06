@@ -98,13 +98,14 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     file.close();
 
-    if((imax%iproc) != 0 or (jmax%jproc) != 0){
-        int error_rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &error_rank);
-        if(error_rank == 0){  
-            std::cout << " UNEVEN DOMAIN DIVISION." << std::endl;
-            std::cout << " PLEASE CHOOSE VALUES CORRESPONDING TO imax % iproc = 0 and jmax % jproc = 0." << std::endl;
-        }
+    int error_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &error_size);
+    int error_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &error_rank);
+
+    if(error_rank == 0 && error_size != jproc*iproc){
+        std::cout << "Invalid input for number of processes." << std::endl;
+        std::cout << "Example usage: mpirun -np (iproc*jproc) /path/to/fluidchen /path/to/input_data.dat" << std::endl;
         exit(1);
     }
 
@@ -134,7 +135,6 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     build_domain(domain, imax, jmax);
 
-    // TODO create _communicate class
     //Communication communication;
 
     _grid = Grid(_geom_name, domain);
@@ -277,18 +277,18 @@ void Case::simulate() {
 
         _field.calculate_fluxes(_grid);
 
-
-
-//        for(int i = 0; i < domain.size_x + 2; i++){
-//            std::cout << _field.f_matrix(i,0) << std::endl;
-//        }
-
+        /*
+        // --------------- DEBUG: Printing field matrix ------------------------
+        for(int i = 0; i < domain.size_x + 2; i++){
+        std::cout << _field.f_matrix(i,0) << std::endl;
+        }
+        */
 
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
         }
-        // TODO communicate fluxes
+        // Communicate fluxes
         _communication.communicate(_field.f_matrix(), domain, iproc, jproc);
         _communication.communicate(_field.g_matrix(), domain, iproc, jproc);
 
@@ -499,7 +499,6 @@ void Case::build_domain(Domain &domain, int imax, int jmax) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if(rank == 0){
-        // Only for even cell sizes
         domain.size_x = floor(imax/iproc);
         domain.size_y = floor(jmax/jproc);
         domain.imin = 0;
@@ -512,6 +511,8 @@ void Case::build_domain(Domain &domain, int imax, int jmax) {
         int imax_loc;
         int jmax_loc = jmin_loc + domain.size_y - 1;
 
+        int send_size_x;
+        int send_size_y;
         int send_imin_loc;
         int send_jmin_loc;
         int send_imax_loc;
@@ -519,9 +520,9 @@ void Case::build_domain(Domain &domain, int imax, int jmax) {
 
         //Send data of domain
         for (int k = 1; k < jproc*iproc; k++){
-            MPI_Send(&domain.size_x, 1, MPI_INT, k, 1, MPI_COMM_WORLD);
-            MPI_Send(&domain.size_y, 1, MPI_INT, k, 2, MPI_COMM_WORLD);
-        
+            send_size_x = domain.size_x;
+            send_size_y = domain.size_y; 
+
             imin_loc += domain.size_x;
             imax_loc = imin_loc + domain.size_x - 1;
 
@@ -532,11 +533,24 @@ void Case::build_domain(Domain &domain, int imax, int jmax) {
                 jmax_loc = jmin_loc + domain.size_y - 1;
             }
 
+            // On TOP edge in case of uneven j division
+            if ((k + iproc) >= (iproc * jproc) && (jmax%jproc) != 0) {
+                send_size_y = domain.size_y + jmax%jproc;
+                jmax_loc = jmin_loc + send_size_y - 1;
+            }
+            // On RIGHT edge in case of uneven i division
+            if (((k + 1)%iproc) == 0 && (imax%iproc) != 0){
+                send_size_x = domain.size_x + imax%iproc;
+                imax_loc = imin_loc + send_size_x - 1;
+            }
+
             send_imin_loc = imin_loc - 1;
             send_jmin_loc = jmin_loc - 1;
             send_imax_loc = imax_loc + 2;
             send_jmax_loc = jmax_loc + 2;
-            
+
+            MPI_Send(&send_size_x, 1, MPI_INT, k, 1, MPI_COMM_WORLD);
+            MPI_Send(&send_size_y, 1, MPI_INT, k, 2, MPI_COMM_WORLD);
             MPI_Send(&send_imin_loc, 1, MPI_INT, k, 3, MPI_COMM_WORLD);
             MPI_Send(&send_jmin_loc, 1, MPI_INT, k, 4, MPI_COMM_WORLD);
             MPI_Send(&send_imax_loc, 1, MPI_INT, k, 5, MPI_COMM_WORLD);
