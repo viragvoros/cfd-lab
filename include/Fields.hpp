@@ -150,6 +150,9 @@ class Fields {
     /// g velocity matrix access and modify
     Matrix<double> &g_matrix();
 
+    /// t velocity matrix access and modify
+    Matrix<double> &t_matrix();
+
   private:
     /// x-velocity matrix
     Matrix<double> _U;

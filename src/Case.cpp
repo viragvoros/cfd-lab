@@ -246,6 +246,11 @@ void Case::simulate() {
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
+    if(my_rank == 0){
+        std::cout << "----------------Start of Simulation--------------\n" << "Printed simulation statistics are valid for the master rank only\n" << std::endl;
+    }
+
+
     // Calculate local maximum for velocities
     double local_max_v;
     double local_max_u;
@@ -258,6 +263,7 @@ void Case::simulate() {
     double u_rel_update;
     double v_rel_update;
     double t_rel_update;
+
 
     // Counter for SOR fails
     int SOR_fail_counter{0};
@@ -275,6 +281,8 @@ void Case::simulate() {
 
         _field.calculate_temperature(_grid);
 
+        _communication.communicate(_field.t_matrix(), domain, iproc, jproc);
+
         _field.calculate_fluxes(_grid);
 
         /*
@@ -289,6 +297,7 @@ void Case::simulate() {
             boundary->apply(_field);
         }
         // Communicate fluxes
+
         _communication.communicate(_field.f_matrix(), domain, iproc, jproc);
         _communication.communicate(_field.g_matrix(), domain, iproc, jproc);
 
@@ -332,11 +341,15 @@ void Case::simulate() {
 
         // TODO: MPI_Allreduce on all printed variables
 
+
         if (output_counter == 20 || output_counter % 100 == 0) {
             if (my_rank == 0) {
+
                 u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
                 v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
                 t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
+
+
                 std::cout << std::fixed;
                 std::cout << std::setprecision(5);
                 std::cout << "Time: " << t << "\t\t"

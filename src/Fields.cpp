@@ -158,6 +158,7 @@ Matrix<double> &Fields::u_matrix() { return _U; }
 Matrix<double> &Fields::v_matrix() { return _V; }
 Matrix<double> &Fields::f_matrix() { return _F; }
 Matrix<double> &Fields::g_matrix() { return _G; }
+Matrix<double> &Fields::t_matrix() { return _T; }
 
 double Fields::dt() const { return _dt; }
 double &Fields::u_avg() { return _u_avg; }
