@@ -105,7 +105,9 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     if (error_rank == 0 && error_size != jproc * iproc) {
         std::cout << "-------------------------- ERROR: INVALID INPUT --------------------------" << std::endl;
-        std::cout << "Current value of jproc * jproc: "<< jproc * iproc << ". Your given input for number of processes is " << error_size << ". Change it so it matches jproc * jproc." << std::endl;
+        std::cout << "Current value of jproc * jproc: " << jproc * iproc
+                  << ". Your given input for number of processes is " << error_size
+                  << ". Change it so it matches jproc * jproc." << std::endl;
         std::cout << "Example usage: mpirun -np (iproc*jproc) /path/to/fluidchen /path/to/input_data.dat" << std::endl;
         exit(1);
     }
@@ -252,10 +254,11 @@ void Case::simulate() {
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    if(my_rank == 0){
-        std::cout << "----------------Start of Simulation--------------\n" << "Printed simulation statistics are valid for the master rank only\n" << std::endl;
+    if (my_rank == 0) {
+        std::cout << "----------------Start of Simulation--------------\n"
+                  << "Printed simulation statistics are valid for the master rank only\n"
+                  << std::endl;
     }
-
 
     // Calculate local maximum for velocities
     double local_max_v;
@@ -269,7 +272,6 @@ void Case::simulate() {
     double u_rel_update;
     double v_rel_update;
     double t_rel_update;
-
 
     // Counter for SOR fails
     int SOR_fail_counter{0};
@@ -352,15 +354,12 @@ void Case::simulate() {
                 v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
                 t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
 
-
                 std::cout << std::fixed;
                 std::cout << std::setprecision(3);
                 std::cout << "Time: " << t << "\t";
-                std::cout << std::setprecision(5)
-                          << "dt: " << dt << "\t"
+                std::cout << std::setprecision(5) << "dt: " << dt << "\t"
                           << "SOR-Iter: " << nb_iter << "\t";
-                std::cout << std::setprecision(3)
-                          << "U-Rel-Update: " << std::scientific << u_rel_update << "\t\t"
+                std::cout << std::setprecision(3) << "U-Rel-Update: " << std::scientific << u_rel_update << "\t\t"
                           << "V-Rel-Update: " << v_rel_update << "\t\t"
                           << "P-Rel-Update: " << mean_p << "\t\t"
                           << "T-Rel-Update: " << t_rel_update << std::endl;
