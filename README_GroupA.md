@@ -47,18 +47,36 @@ cmake -DCMAKE_CXX_FLAGS="-O3" ..
 ## Running
 
 In order to run **Fluidchen**, the case file should be given as input parameter. Some default case files are located in the `example_cases` directory. If you installed **Fluidchen**, you can execute them from anywhere you want as
+
 For Serial:
 
 ```shell
 fluidchen /path/to/fluidchen/example_cases/LidDrivenCavity/LidDrivenCavity.dat
 ```
 
-This will run the case file and create the output folder `/path/to/case/case_name_Output` which holds the `.vtk` files of the solution. The output folder is created in the same location as your case file. Note that this may require write permissions in the given directory.
+To calculate the simulation in parallel, run:
+
+```shell
+mpirun -np <iproc*jproc> ./fluidchen /path/to/fluidchen/example_cases/LidDrivenCavity/LidDrivenCavity.dat
+```
+
+If you want to run on more cores than available on your machine, simply run:
+```shell
+mpirun --oversubscribe -np <iproc*jproc> ./fluidchen ~/Documents/Master/Module/SS_2021/CFD_Lab/fluidchen-skeleton/example_cases/FluidTrap/FluidTrap.dat
+```
+
+, where iproc and jproc represent the number of division in x-, and y-directions. Accordingly, iproc*jproc represents the total amount of processes used to calculate this simulation.
+Be aware that these have to match the iproc and jproc parameters in the .dat file. If the user wants to calculate in serial iproc and jproc can either be deleted in the dat file or set to 1.
+
+This will run the case file and create the output folder `/path/to/case/case_name_Output_iprocxjproc` which holds the `.vtk` files of the solution. The output folder is created in the same location as your case file. Note that this may require write permissions in the given directory.
+
+For analysis of the parallel results: Each rank writes it's own .vtk file. Plotting them next to each other resembles the complete simulation in the end. 
 
 If input file does not contain a geometry file, fluidchen will run lid-driven cavity case with given parameters.
 
-### Simulation Report
-Fluidchen is printing important information about the simulation to the terminal at runtime.
+### Simulation Report 
+Fluidchen is printing important information about the simulation to the terminal at runtime. It will tell the user if the SOR solver is not converging, as well as the pressure residuals and the overall computation time from initialisation to finalisation. 
+WATCH OUT: RESIDUALS AND RELATIVE UPDATES ONLY VALID FOR MASTER RANK !
 #### General Information
 
 * If the SOR solver doesn't converge it will tell you at which timestep it fails

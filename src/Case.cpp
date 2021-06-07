@@ -104,7 +104,8 @@ Case::Case(std::string file_name, int argn, char **args) {
     MPI_Comm_rank(MPI_COMM_WORLD, &error_rank);
 
     if (error_rank == 0 && error_size != jproc * iproc) {
-        std::cout << "Invalid input for number of processes." << std::endl;
+        std::cout << "-------------------------- ERROR: INVALID INPUT --------------------------" << std::endl;
+        std::cout << "Current value of jproc * jproc: "<< jproc * iproc << ". Your given input for number of processes is " << error_size << ". Change it so it matches jproc * jproc." << std::endl;
         std::cout << "Example usage: mpirun -np (iproc*jproc) /path/to/fluidchen /path/to/input_data.dat" << std::endl;
         exit(1);
     }
@@ -197,7 +198,12 @@ void Case::set_file_names(std::string file_name) {
     _case_name.erase(_case_name.size() - 4);
     _dict_name = temp_dir;
     _dict_name.append(_case_name);
-    _dict_name.append("_Output");
+    _dict_name.append("_Output_");
+    std::string string_iproc = std::to_string(iproc);
+    std::string string_jproc = std::to_string(jproc);
+    _dict_name.append(string_iproc);
+    _dict_name.append("x");
+    _dict_name.append(string_jproc);
 
     if (_geom_name.compare("NONE") != 0) {
         _geom_name = _prefix + _geom_name;
@@ -339,9 +345,6 @@ void Case::simulate() {
         output_counter++;
         t = t + dt;
 
-        // TODO: MPI_Allreduce on all printed variables
-
-
         if (output_counter == 20 || output_counter % 100 == 0) {
             if (my_rank == 0) {
 
@@ -351,11 +354,13 @@ void Case::simulate() {
 
 
                 std::cout << std::fixed;
-                std::cout << std::setprecision(5);
-                std::cout << "Time: " << t << "\t\t"
+                std::cout << std::setprecision(3);
+                std::cout << "Time: " << t << "\t";
+                std::cout << std::setprecision(5)
                           << "dt: " << dt << "\t"
-                          << "SOR-Iter: " << nb_iter << "\t"
-                          << "U-Rel-Update: " << u_rel_update << "\t\t"
+                          << "SOR-Iter: " << nb_iter << "\t";
+                std::cout << std::setprecision(3)
+                          << "U-Rel-Update: " << std::scientific << u_rel_update << "\t\t"
                           << "V-Rel-Update: " << v_rel_update << "\t\t"
                           << "P-Rel-Update: " << mean_p << "\t\t"
                           << "T-Rel-Update: " << t_rel_update << std::endl;

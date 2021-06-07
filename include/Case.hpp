@@ -63,9 +63,9 @@ class Case {
     /// Wall (id 5) velocity
     double wall_vel_5;
     /// Number of processes in x direction
-    int iproc{2};
+    int iproc{1};
     /// Number of processes in y direction
-    int jproc{3};
+    int jproc{1};
 
     /// Simulation time
     double _t_end;
