@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <mpi.h>
 
 SOR::SOR(double omega) : _omega(omega) {}
 
@@ -34,8 +35,14 @@ double SOR::solve(Fields &field, Grid &grid, const std::vector<std::unique_ptr<B
         double val = Discretization::laplacian(field.p_matrix(), i, j) - field.rs(i, j);
         rloc += (val * val);
     }
+
+    int num_fluid_cell = grid.fluid_cells().size();
+
+    MPI_Allreduce(MPI_IN_PLACE, &num_fluid_cell, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &rloc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
     {
-        res = rloc / (grid.fluid_cells().size());
+        res = rloc / num_fluid_cell;
         res = std::sqrt(res);
     }
     return res;

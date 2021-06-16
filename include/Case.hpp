@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Boundary.hpp"
+#include "Communication.hpp"
 #include "Discretization.hpp"
 #include "Domain.hpp"
 #include "Fields.hpp"
@@ -61,15 +62,21 @@ class Case {
     double wall_vel_4;
     /// Wall (id 5) velocity
     double wall_vel_5;
+    /// Number of processes in x direction
+    int iproc{1};
+    /// Number of processes in y direction
+    int jproc{1};
 
     /// Simulation time
     double _t_end;
     /// Solution file outputting frequency
     double _output_freq;
 
+    Communication _communication;
     Fields _field;
     Grid _grid;
     Discretization _discretization;
+    Domain domain;
     std::unique_ptr<PressureSolver> _pressure_solver;
     std::vector<std::unique_ptr<Boundary>> _boundaries;
 
@@ -98,7 +105,7 @@ class Case {
      *
      * @param[in] Timestep of the solution
      */
-    void output_vtk(int my_rank);
+    void output_vtk(int file_number, int my_rank);
 
-    void build_domain(Domain &domain, int imax_domain, int jmax_domain);
+    void build_domain(Domain &domain, int imax, int jmax);
 };

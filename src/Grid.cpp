@@ -9,39 +9,102 @@
 #include <vector>
 
 Grid::Grid(std::string geom_name, Domain &domain) {
-
     _domain = domain;
 
     _cells = Matrix<Cell>(_domain.size_x + 2, _domain.size_y + 2);
 
     if (geom_name.compare("NONE")) {
-        std::vector<std::vector<int>> geom_data(_domain.domain_size_x + 2,
-                                                std::vector<int>(_domain.domain_size_y + 2, 0));
+        std::vector<std::vector<int>> geom_data(_domain.size_x + 2, std::vector<int>(_domain.size_y + 2, 0));
         parse_geometry_file(geom_name, geom_data);
         assign_cell_types(geom_data);
         geometry_data = geom_data;
+
+        /*
+        // --------------- DEBUG: Printing grid and process domain data ------------------------
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if(rank == 0){
+            for (int j = 0 ; j <= _domain.size_y + 1; j++ ){
+                for (int i = 0; i <= _domain.size_x + 1; i++) {
+                    if (_cells(i,j).type() == cell_type::FLUID_BUFFER) {
+                        std::cout << "x" << " " ;
+                    } else {
+                        std::cout << geometry_data.at(i).at(j) << " " ;
+                    }
+                }
+                std::cout << "\n";
+            }
+        } else {
+            std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  "-" << _domain.imax << std::endl;
+            std::cout << "J IN RANK " << rank << ": " << _domain.jmin << "-" << _domain.jmax << std::endl;
+            std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
+            std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
+            std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
+            std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
+        }
+        */
+
     } else {
         build_lid_driven_cavity();
     }
 }
 
 void Grid::build_lid_driven_cavity() {
-    std::vector<std::vector<int>> geometry_data(_domain.domain_size_x + 2,
-                                                std::vector<int>(_domain.domain_size_y + 2, 0));
+    std::vector<std::vector<int>> geometry_data(_domain.size_x + 2, std::vector<int>(_domain.size_y + 2, 0));
 
+    int array_lid[_domain.domain_size_x + 2][_domain.domain_size_y + 2];
+
+    // Build the Lid Geometry in the array
     for (int i = 0; i < _domain.domain_size_x + 2; ++i) {
         for (int j = 0; j < _domain.domain_size_y + 2; ++j) {
             // Bottom, left and right walls: no-slip
             if (i == 0 || j == 0 || i == _domain.domain_size_x + 1) {
-                geometry_data.at(i).at(j) = LidDrivenCavity::fixed_wall_id;
+                array_lid[i][j] = LidDrivenCavity::fixed_wall_id;
             }
             // Top wall: moving wall
             else if (j == _domain.domain_size_y + 1) {
-                geometry_data.at(i).at(j) = LidDrivenCavity::moving_wall_id;
+                array_lid[i][j] = LidDrivenCavity::moving_wall_id;
+            }
+            // Inner cells: fluid
+            else {
+                array_lid[i][j] = 0;
             }
         }
     }
+
+    // Copy the local domain information into geometry_data
+    for (int col = _domain.jmin; col < _domain.jmax; ++col) {
+        for (int row = _domain.imin; row < _domain.imax; ++row) {
+            geometry_data[row - _domain.imin][col - _domain.jmin] = array_lid[row][col];
+        }
+    }
+
     assign_cell_types(geometry_data);
+
+    /*
+    // --------------- DEBUG: Printing grid and process domain data ------------------------
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if(rank == 0){
+        for (int j = 0 ; j <= _domain.size_y + 1; j++ ){
+            for (int i = 0; i <= _domain.size_x + 1; i++) {
+                if (_cells(i,j).type() == cell_type::FLUID_BUFFER) {
+                    std::cout << "x" << " " ;
+                } else {
+                    std::cout << geometry_data.at(i).at(j) << " " ;
+                }
+            }
+            std::cout << "\n";
+        }
+    } else {
+        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  "-" << _domain.imax << std::endl;
+        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << "-" << _domain.jmax << std::endl;
+        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
+        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
+        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
+        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
+    }
+    */
 }
 
 void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
@@ -49,15 +112,16 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
     int i = 0;
     int j = 0;
 
-    for (int j_geom = _domain.jmin; j_geom < _domain.jmax; ++j_geom) {
+    for (int j_geom = 0; j_geom <= _domain.size_y + 1; ++j_geom) {
         {
             i = 0;
         }
 
-        for (int i_geom = _domain.imin; i_geom < _domain.imax; ++i_geom) {
-            if (geometry_data.at(i_geom).at(j_geom) == 0) {
-                _cells(i, j) = Cell(i, j, cell_type::FLUID);
-                _fluid_cells.push_back(&_cells(i, j));
+        for (int i_geom = 0; i_geom <= _domain.size_x + 1; ++i_geom) {
+            if (geometry_data.at(i_geom).at(j_geom) == 0 &&
+                (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1)) {
+                _cells(i, j) = Cell(i, j, cell_type::FLUID_BUFFER);
+                _fluidbuffer_cells.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 8) {
                 _cells(i, j) = Cell(i, j, cell_type::MOVING_WALL, geometry_data.at(i_geom).at(j_geom));
                 _moving_wall_cells.push_back(&_cells(i, j));
@@ -73,25 +137,16 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
             } else if (geometry_data.at(i_geom).at(j_geom) == 5) {
                 _cells(i, j) = Cell(i, j, cell_type::WALL_5, geometry_data.at(i_geom).at(j_geom));
                 _fixed_wall_cells_5.push_back(&_cells(i, j));
-            } else if (geometry_data.at(i_geom).at(j_geom) == 6) {
-                _cells(i, j) = Cell(i, j, cell_type::WALL_6, geometry_data.at(i_geom).at(j_geom));
-                _fixed_wall_cells_6.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 1) {
                 _cells(i, j) = Cell(i, j, cell_type::INFLOW, geometry_data.at(i_geom).at(j_geom));
                 _inflow_cells.push_back(&_cells(i, j));
+            } else if (geometry_data.at(i_geom).at(j_geom) == 2) {
+                _cells(i, j) = Cell(i, j, cell_type::OUTFLOW, geometry_data.at(i_geom).at(j_geom));
+                _outflow_cells.push_back(&_cells(i, j));
             } else {
-                if (geometry_data.at(i_geom).at(j_geom) == 2) {
-                    _cells(i, j) = Cell(i, j, cell_type::OUTFLOW, geometry_data.at(i_geom).at(j_geom));
-                    _outflow_cells.push_back(&_cells(i, j));
-                }
+                _cells(i, j) = Cell(i, j, cell_type::FLUID, geometry_data.at(i_geom).at(j_geom));
+                _fluid_cells.push_back(&_cells(i, j));
             }
-            //     else {
-            //         if (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1) {
-            //             // Outer walls
-            //             _cells(i, j) = Cell(i, j, cell_type::FIXED_WALL, geometry_data.at(i_geom).at(j_geom));
-            //             _fixed_wall_cells.push_back(&_cells(i, j));
-            //         }
-
             ++i;
         }
         ++j;
@@ -103,10 +158,12 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
     j = 0;
     _cells(i, j).set_neighbour(&_cells(i, j + 1), border_position::TOP);
     _cells(i, j).set_neighbour(&_cells(i + 1, j), border_position::RIGHT);
-    if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::TOP);
     }
-    if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::RIGHT);
     }
     // Top-Left Corner
@@ -114,10 +171,12 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
     j = _domain.size_y + 1;
     _cells(i, j).set_neighbour(&_cells(i, j - 1), border_position::BOTTOM);
     _cells(i, j).set_neighbour(&_cells(i + 1, j), border_position::RIGHT);
-    if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::BOTTOM);
     }
-    if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::RIGHT);
     }
 
@@ -126,10 +185,12 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
     j = Grid::_domain.size_y + 1;
     _cells(i, j).set_neighbour(&_cells(i, j - 1), border_position::BOTTOM);
     _cells(i, j).set_neighbour(&_cells(i - 1, j), border_position::LEFT);
-    if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::BOTTOM);
     }
-    if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::LEFT);
     }
 
@@ -138,10 +199,12 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
     j = 0;
     _cells(i, j).set_neighbour(&_cells(i, j + 1), border_position::TOP);
     _cells(i, j).set_neighbour(&_cells(i - 1, j), border_position::LEFT);
-    if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::TOP);
     }
-    if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID) {
+    if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID or
+        _cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID_BUFFER) {
         _cells(i, j).add_border(border_position::LEFT);
     }
     // Bottom cells
@@ -150,13 +213,16 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
         _cells(i, j).set_neighbour(&_cells(i + 1, j), border_position::RIGHT);
         _cells(i, j).set_neighbour(&_cells(i - 1, j), border_position::LEFT);
         _cells(i, j).set_neighbour(&_cells(i, j + 1), border_position::TOP);
-        if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::RIGHT);
         }
-        if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::LEFT);
         }
-        if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::TOP);
         }
     }
@@ -168,13 +234,16 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
         _cells(i, j).set_neighbour(&_cells(i + 1, j), border_position::RIGHT);
         _cells(i, j).set_neighbour(&_cells(i - 1, j), border_position::LEFT);
         _cells(i, j).set_neighbour(&_cells(i, j - 1), border_position::BOTTOM);
-        if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::RIGHT);
         }
-        if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::LEFT);
         }
-        if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::BOTTOM);
         }
     }
@@ -185,13 +254,16 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
         _cells(i, j).set_neighbour(&_cells(i + 1, j), border_position::RIGHT);
         _cells(i, j).set_neighbour(&_cells(i, j - 1), border_position::BOTTOM);
         _cells(i, j).set_neighbour(&_cells(i, j + 1), border_position::TOP);
-        if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::RIGHT);
         }
-        if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::BOTTOM);
         }
-        if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::TOP);
         }
     }
@@ -201,13 +273,16 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
         _cells(i, j).set_neighbour(&_cells(i - 1, j), border_position::LEFT);
         _cells(i, j).set_neighbour(&_cells(i, j - 1), border_position::BOTTOM);
         _cells(i, j).set_neighbour(&_cells(i, j + 1), border_position::TOP);
-        if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::LEFT);
         }
-        if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::BOTTOM);
         }
-        if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID) {
+        if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID or
+            _cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID_BUFFER) {
             _cells(i, j).add_border(border_position::TOP);
         }
     }
@@ -221,16 +296,20 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
             _cells(i, j).set_neighbour(&_cells(i, j - 1), border_position::BOTTOM);
 
             if (_cells(i, j).type() != cell_type::FLUID) {
-                if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID) {
+                if (_cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID or
+                    _cells(i, j).neighbour(border_position::LEFT)->type() == cell_type::FLUID_BUFFER) {
                     _cells(i, j).add_border(border_position::LEFT);
                 }
-                if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID) {
+                if (_cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID or
+                    _cells(i, j).neighbour(border_position::RIGHT)->type() == cell_type::FLUID_BUFFER) {
                     _cells(i, j).add_border(border_position::RIGHT);
                 }
-                if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID) {
+                if (_cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID or
+                    _cells(i, j).neighbour(border_position::BOTTOM)->type() == cell_type::FLUID_BUFFER) {
                     _cells(i, j).add_border(border_position::BOTTOM);
                 }
-                if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID) {
+                if (_cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID or
+                    _cells(i, j).neighbour(border_position::TOP)->type() == cell_type::FLUID_BUFFER) {
                     _cells(i, j).add_border(border_position::TOP);
                 }
             }
@@ -262,20 +341,22 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
     // Fourth line : depth
     ss >> depth;
 
+    int array[numrows][numcols];
+
     // Following lines : data
     for (int col = numcols - 1; col > -1; --col) {
         for (int row = 0; row < numrows; ++row) {
-            ss >> geometry_data[row][col];
+            ss >> array[row][col];
+            ;
         }
     }
 
-    //      for (int j = 0; j < numcols; j++ ){
-
-    //       for (int i = 0; i < numrows; i++) {
-    //           std::cout << geometry_data[j][i] << " " ;
-    //        }
-    //        std::cout << "\n";
-    //    }
+    // Copy the local domain information into geometry_data
+    for (int col = _domain.jmin; col < _domain.jmax; ++col) {
+        for (int row = _domain.imin; row < _domain.imax; ++row) {
+            geometry_data[row - _domain.imin][col - _domain.jmin] = array[row][col];
+        }
+    }
 
     infile.close();
 }
@@ -304,7 +385,7 @@ const std::vector<Cell *> &Grid::fixed_wall_cells_4() const { return _fixed_wall
 
 const std::vector<Cell *> &Grid::fixed_wall_cells_5() const { return _fixed_wall_cells_5; }
 
-const std::vector<Cell *> &Grid::fixed_wall_cells_6() const { return _fixed_wall_cells_6; }
+const std::vector<Cell *> &Grid::fluidbuffer_cells() const { return _fluidbuffer_cells; }
 
 const std::vector<Cell *> &Grid::outflow_cells() const { return _outflow_cells; }
 

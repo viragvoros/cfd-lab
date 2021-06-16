@@ -115,21 +115,21 @@ void Fields::calculate_temperature(Grid &grid) {
 }
 
 // Function was implemented to get maximum value of matrix
-double Fields::find_max(const Matrix<double> &M, const Grid &grid) {
+double Fields::find_max(const Matrix<double> &M) {
     double maximum = 0;
-    for (int j = 0; j <= (grid.jmax() + 1); ++j) {
-        for (int i = 0; i <= (grid.imax() + 1); ++i) {
-            maximum = std::max(M(i, j), maximum);
-        }
+    for (const auto &cell : _cells) {
+        int i = cell->i();
+        int j = cell->j();
+        maximum = std::max(M(i, j), maximum);
     }
     return maximum;
 }
 
 // Getting optimum dt based on CFL condition
-double Fields::calculate_dt(Grid &grid) {
+double Fields::calculate_dt(Grid &grid, const double &max_u, const double &max_v) {
     double val_1 = (1 / (2 * _nu)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
-    double val_2 = grid.dx() / std::abs(find_max(_U, grid));
-    double val_3 = grid.dy() / std::abs(find_max(_V, grid));
+    double val_2 = grid.dx() / std::abs(max_u);
+    double val_3 = grid.dy() / std::abs(max_v);
     double max_dt;
 
     if (_energy_eq.compare("NONE") == 0) {
@@ -154,6 +154,11 @@ double &Fields::temp(int i, int j) { return _TEMP(i, j); }
 double &Fields::rs(int i, int j) { return _RS(i, j); }
 
 Matrix<double> &Fields::p_matrix() { return _P; }
+Matrix<double> &Fields::u_matrix() { return _U; }
+Matrix<double> &Fields::v_matrix() { return _V; }
+Matrix<double> &Fields::f_matrix() { return _F; }
+Matrix<double> &Fields::g_matrix() { return _G; }
+Matrix<double> &Fields::t_matrix() { return _T; }
 
 double Fields::dt() const { return _dt; }
 double &Fields::u_avg() { return _u_avg; }

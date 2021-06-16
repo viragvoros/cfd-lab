@@ -11,3 +11,7 @@ Makefile
 doxygen_doc
 compile_commands.json
 .clangd
+test
+test.cpp
+example_cases_old
+.idea

@@ -76,18 +76,19 @@ class Fields {
      * y-velocity condition and CFL condition
      *
      * @param[in] grid in which the calculations are done
+     * @param[in] max_u in which the calculations are done
+     * @param[in] max_v in which the calculations are done
      *
      */
-    double calculate_dt(Grid &grid);
+    double calculate_dt(Grid &grid, const double &max_u, const double &max_v);
 
     /**
      * @brief Finding maximum element of matrices
      *
-     * @param[in] grid in which the calculations are done
      * @param[in] data the maximum is to be found in
      *
      */
-    double find_max(const Matrix<double> &M, const Grid &grid);
+    double find_max(const Matrix<double> &M);
 
     /// x-velocity index based access and modify
     double &u(int i, int j);
@@ -137,6 +138,21 @@ class Fields {
     /// pressure matrix access and modify
     Matrix<double> &p_matrix();
 
+    /// u velocity matrix access and modify
+    Matrix<double> &u_matrix();
+
+    /// v velocity matrix access and modify
+    Matrix<double> &v_matrix();
+
+    /// f velocity matrix access and modify
+    Matrix<double> &f_matrix();
+
+    /// g velocity matrix access and modify
+    Matrix<double> &g_matrix();
+
+    /// t velocity matrix access and modify
+    Matrix<double> &t_matrix();
+
   private:
     /// x-velocity matrix
     Matrix<double> _U;
@@ -169,6 +185,7 @@ class Fields {
     double _alpha;
     /// thermal expansion coefficient
     double _beta;
+
     /// fluid cells
     std::vector<Cell *> _cells;
     /// Heat energy on

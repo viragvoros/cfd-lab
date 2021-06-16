@@ -2,11 +2,13 @@
 #include "Enums.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <mpi.h>
 #include <vector>
 
 namespace filesystem = std::filesystem;
@@ -24,24 +26,22 @@ Case::Case(std::string file_name, int argn, char **args) {
     // Read input parameters
     const int MAX_LINE_LENGTH = 1024;
     std::ifstream file(file_name);
-    double nu;      /* viscosity   */
-    double UI;      /* velocity x-direction */
-    double VI;      /* velocity y-direction */
-    double PI;      /* pressure */
-    double GX;      /* gravitation x-direction */
-    double GY;      /* gravitation y-direction */
-    double xlength; /* length of the domain x-dir.*/
-    double ylength; /* length of the domain y-dir.*/
-    double dt;      /* time step */
-    int imax;       /* number of cells x-direction*/
-    int jmax;       /* number of cells y-direction*/
-    double gamma;   /* uppwind differencing factor*/
-    double omg;     /* relaxation factor */
-    double tau;     /* safety factor for time step*/
-    int itermax;    /* max. number of iterations for pressure per time step */
-    double eps;     /* accuracy bound for pressure*/
-    int iproc;
-    int jproc;
+    double nu;        /* viscosity   */
+    double UI;        /* velocity x-direction */
+    double VI;        /* velocity y-direction */
+    double PI;        /* pressure */
+    double GX;        /* gravitation x-direction */
+    double GY;        /* gravitation y-direction */
+    double xlength;   /* length of the domain x-dir.*/
+    double ylength;   /* length of the domain y-dir.*/
+    double dt;        /* time step */
+    int imax;         /* number of cells x-direction*/
+    int jmax;         /* number of cells y-direction*/
+    double gamma;     /* uppwind differencing factor*/
+    double omg;       /* relaxation factor */
+    double tau;       /* safety factor for time step*/
+    int itermax;      /* max. number of iterations for pressure per time step */
+    double eps;       /* accuracy bound for pressure*/
     double UIN;       /* inlet velocity x-direction */
     double VIN;       /* inlet velocity y-direction */
     int num_of_walls; /* number of walls */
@@ -98,6 +98,20 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     file.close();
 
+    int error_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &error_size);
+    int error_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &error_rank);
+
+    if (error_rank == 0 && error_size != jproc * iproc) {
+        std::cout << "-------------------------- ERROR: INVALID INPUT --------------------------" << std::endl;
+        std::cout << "Current value of jproc * jproc: " << jproc * iproc
+                  << ". Your given input for number of processes is " << error_size
+                  << ". Change it so it matches jproc * jproc." << std::endl;
+        std::cout << "Example usage: mpirun -np (iproc*jproc) /path/to/fluidchen /path/to/input_data.dat" << std::endl;
+        exit(1);
+    }
+
     std::map<int, double> wall_vel;
     std::map<int, double> wall_temp;
     if (_geom_name.compare("NONE") == 0) {
@@ -116,13 +130,15 @@ Case::Case(std::string file_name, int argn, char **args) {
     set_file_names(file_name);
 
     // Build up the domain
-    Domain domain;
-    domain.dx = xlength / (double)imax;
+    // Domain domain;
+    domain.dx = xlength / (double)imax; // physical length of one cell
     domain.dy = ylength / (double)jmax;
-    domain.domain_size_x = imax;
-    domain.domain_size_y = jmax;
+    domain.domain_size_x = imax; // global domain size x (amount of cells in x direction) without the ghost cell frame
+    domain.domain_size_y = jmax; // global domain size y (amount of cells in y direction) without the ghost cell frame
 
     build_domain(domain, imax, jmax);
+
+    // Communication communication;
 
     _grid = Grid(_geom_name, domain);
     _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
@@ -137,7 +153,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.moving_wall_cells().empty()) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
-        // std::cout << _boundaries.size() << std::endl;
     }
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp));
@@ -148,11 +163,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.fixed_wall_cells_5().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp));
     }
-    /* Skeleton, in case we need a 6th wall type
-    if (not _grid.fixed_wall_cells_6().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_6()));
-    }
-    */
     if (not _grid.inflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN));
     }
@@ -190,7 +200,12 @@ void Case::set_file_names(std::string file_name) {
     _case_name.erase(_case_name.size() - 4);
     _dict_name = temp_dir;
     _dict_name.append(_case_name);
-    _dict_name.append("_Output");
+    _dict_name.append("_Output_");
+    std::string string_iproc = std::to_string(iproc);
+    std::string string_jproc = std::to_string(jproc);
+    _dict_name.append(string_iproc);
+    _dict_name.append("x");
+    _dict_name.append(string_jproc);
 
     if (_geom_name.compare("NONE") != 0) {
         _geom_name = _prefix + _geom_name;
@@ -229,12 +244,25 @@ void Case::set_file_names(std::string file_name) {
  */
 void Case::simulate() {
 
-    // std::cout << "Entering simulate" << std::endl;
     double t = 0.0;
     double dt = _field.dt();
 
     // Used as input parameter for vtk file generation
     int output_counter = 0;
+
+    // Getting rank for vtk output name
+    int my_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    if (my_rank == 0) {
+        std::cout << "----------------Start of Simulation--------------\n"
+                  << "Printed simulation statistics are valid for the master rank only\n"
+                  << std::endl;
+    }
+
+    // Calculate local maximum for velocities
+    double local_max_v;
+    double local_max_u;
 
     // Declare parameters for relative update calculation
     double previous_mean_u;
@@ -254,31 +282,40 @@ void Case::simulate() {
         previous_mean_v = _field.v_avg();
         previous_mean_t = _field.t_avg();
 
-        // Calculate optimum timestep
-        dt = _field.calculate_dt(_grid);
-
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
         }
 
         _field.calculate_temperature(_grid);
 
+        _communication.communicate(_field.t_matrix(), domain, iproc, jproc);
+
         _field.calculate_fluxes(_grid);
+
+        /*
+        // --------------- DEBUG: Printing field matrix ------------------------
+        for(int i = 0; i < domain.size_x + 2; i++){
+        std::cout << _field.f_matrix(i,0) << std::endl;
+        }
+        */
+
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
-            // std::cout << "Entering apply boundaries" << std::endl;
         }
+        // Communicate fluxes
+
+        _communication.communicate(_field.f_matrix(), domain, iproc, jproc);
+        _communication.communicate(_field.g_matrix(), domain, iproc, jproc);
 
         _field.calculate_rs(_grid);
 
         int nb_iter = 0;
         while (nb_iter <= _max_iter) {
             double res = _pressure_solver->solve(_field, _grid, _boundaries);
+            _communication.communicate(_field.p_matrix(), domain, iproc, jproc);
             if (res <= _tolerance) {
-                //  std::cout << res << std::endl; // DEBUG
                 mean_p = res; // pressure relative update
                 break;
             }
@@ -286,58 +323,60 @@ void Case::simulate() {
         }
 
         if (nb_iter == _max_iter + 1) {
-            std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\t"
-                      << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
+            if (my_rank == 0) {
+                std::cout << "WARNING: SOR SOLVER DID NOT CONVERGE IN TIMESTEP " << output_counter + 1 << "\t"
+                          << "OBTAINED RESULTS MIGHT BE ERRONOUS. \n";
+            }
             SOR_fail_counter++;
         }
 
         _field.calculate_velocities(_grid);
 
-        /*
-        // DEBUG: Printig fields to console
-        std::cout << "---------------------- u field ------------------------------" << std::endl;
-        for (int jx = 0; jx < 22; jx++ ){
-            for (int ix = 0; ix < 73; ix++) {
-                std::cout << _field.u(ix, jx) << " " ;
-            }
-            std::cout << "\n";
-        }
-        std::cout << "---------------------- v field ------------------------------" << std::endl;
-        for (int jx = 0; jx < 22; jx++ ){
-            for (int ix = 0; ix < 73; ix++) {
-                std::cout << _field.v(ix, jx) << " " ;
-            }
-            std::cout << "\n";
-        }
-        */
+        _communication.communicate(_field.u_matrix(), domain, iproc, jproc);
+        _communication.communicate(_field.v_matrix(), domain, iproc, jproc);
+
+        local_max_u = _field.find_max(_field.u_matrix());
+        local_max_v = _field.find_max(_field.v_matrix());
+
+        MPI_Allreduce(MPI_IN_PLACE, &local_max_u, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE, &local_max_v, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+        // Calculate optimum timestep
+        dt = _field.calculate_dt(_grid, local_max_u, local_max_v);
 
         output_counter++;
         t = t + dt;
 
         if (output_counter == 20 || output_counter % 100 == 0) {
-            u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
-            v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
-            t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
-            std::cout << std::fixed;
-            std::cout << std::setprecision(5);
-            std::cout << "Time: " << t << "\t\t"
-                      << "dt: " << dt << "\t"
-                      << "SOR-Iter: " << nb_iter << "\t"
-                      << "U-Rel-Update: " << u_rel_update << "\t\t"
-                      << "V-Rel-Update: " << v_rel_update << "\t\t"
-                      << "P-Rel-Update: " << mean_p << "\t\t"
-                      << "T-Rel-Update: " << t_rel_update << std::endl;
-            output_vtk(output_counter);
+            if (my_rank == 0) {
+
+                u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
+                v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
+                t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
+
+                std::cout << std::fixed;
+                std::cout << std::setprecision(3);
+                std::cout << "Time: " << t << "\t";
+                std::cout << std::setprecision(5) << "dt: " << dt << "\t"
+                          << "SOR-Iter: " << nb_iter << "\t";
+                std::cout << std::setprecision(3) << "U-Rel-Update: " << std::scientific << u_rel_update << "\t\t"
+                          << "V-Rel-Update: " << v_rel_update << "\t\t"
+                          << "P-Rel-Update: " << mean_p << "\t\t"
+                          << "T-Rel-Update: " << t_rel_update << std::endl;
+            }
+            output_vtk(output_counter, my_rank);
         }
     }
 
-    output_vtk(output_counter);
-    std::cout << "\nEnd of Simulation \n\nSimulation Report: "
-              << "End time: " << t << "\t || SOR Solver failed " << SOR_fail_counter
-              << " times. Check previous terminal information to find the corresponding timesteps." << std::endl;
+    output_vtk(output_counter, my_rank);
+    if (my_rank == 0) {
+        std::cout << "\nEnd of Simulation \n\nSimulation Report: "
+                  << "End time: " << t << "\t || SOR Solver failed " << SOR_fail_counter
+                  << " times. Check previous terminal information to find the corresponding timesteps." << std::endl;
+    }
 }
 
-void Case::output_vtk(int file_number) {
+void Case::output_vtk(int file_number, int my_rank) {
     // Create a new structured grid
     vtkSmartPointer<vtkStructuredGrid> structuredGrid = vtkSmartPointer<vtkStructuredGrid>::New();
 
@@ -462,18 +501,86 @@ void Case::output_vtk(int file_number) {
     vtkSmartPointer<vtkStructuredGridWriter> writer = vtkSmartPointer<vtkStructuredGridWriter>::New();
 
     // Create Filename
-    std::string outputname = _dict_name + '/' + _case_name + "_" + std::to_string(file_number) + ".vtk";
+    std::string outputname =
+        _dict_name + '/' + _case_name + "_" + std::to_string(my_rank) + "." + std::to_string(file_number) + ".vtk";
 
     writer->SetFileName(outputname.c_str());
     writer->SetInputData(structuredGrid);
     writer->Write();
 }
 
-void Case::build_domain(Domain &domain, int imax_domain, int jmax_domain) {
-    domain.imin = 0;
-    domain.jmin = 0;
-    domain.imax = imax_domain + 2;
-    domain.jmax = jmax_domain + 2;
-    domain.size_x = imax_domain;
-    domain.size_y = jmax_domain;
+void Case::build_domain(Domain &domain, int imax, int jmax) {
+    int rank;
+    int size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (rank == 0) {
+        domain.size_x = floor(imax / iproc);
+        domain.size_y = floor(jmax / jproc);
+        domain.imin = 0;
+        domain.jmin = 0;
+        domain.imax = domain.imin + domain.size_x + 2;
+        domain.jmax = domain.jmin + domain.size_y + 2;
+
+        int imin_loc = 1;
+        int jmin_loc = 1;
+        int imax_loc;
+        int jmax_loc = jmin_loc + domain.size_y - 1;
+
+        int send_size_x;
+        int send_size_y;
+        int send_imin_loc;
+        int send_jmin_loc;
+        int send_imax_loc;
+        int send_jmax_loc;
+
+        // Send data of domain
+        for (int k = 1; k < jproc * iproc; k++) {
+            send_size_x = domain.size_x;
+            send_size_y = domain.size_y;
+
+            imin_loc += domain.size_x;
+            imax_loc = imin_loc + domain.size_x - 1;
+
+            if ((k % iproc) == 0) {
+                imin_loc = 1;
+                imax_loc = imin_loc + domain.size_x - 1; // Reassigning because of imin_loc
+                jmin_loc += domain.size_y;
+                jmax_loc = jmin_loc + domain.size_y - 1;
+            }
+
+            // On TOP edge in case of uneven j division
+            if ((k + iproc) >= (iproc * jproc) && (jmax % jproc) != 0) {
+                send_size_y = domain.size_y + jmax % jproc;
+                jmax_loc = jmin_loc + send_size_y - 1;
+            }
+            // On RIGHT edge in case of uneven i division
+            if (((k + 1) % iproc) == 0 && (imax % iproc) != 0) {
+                send_size_x = domain.size_x + imax % iproc;
+                imax_loc = imin_loc + send_size_x - 1;
+            }
+
+            send_imin_loc = imin_loc - 1;
+            send_jmin_loc = jmin_loc - 1;
+            send_imax_loc = imax_loc + 2;
+            send_jmax_loc = jmax_loc + 2;
+
+            MPI_Send(&send_size_x, 1, MPI_INT, k, 1, MPI_COMM_WORLD);
+            MPI_Send(&send_size_y, 1, MPI_INT, k, 2, MPI_COMM_WORLD);
+            MPI_Send(&send_imin_loc, 1, MPI_INT, k, 3, MPI_COMM_WORLD);
+            MPI_Send(&send_jmin_loc, 1, MPI_INT, k, 4, MPI_COMM_WORLD);
+            MPI_Send(&send_imax_loc, 1, MPI_INT, k, 5, MPI_COMM_WORLD);
+            MPI_Send(&send_jmax_loc, 1, MPI_INT, k, 6, MPI_COMM_WORLD);
+        }
+
+    } else {
+        MPI_Recv(&domain.size_x, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.size_y, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.imin, 1, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.jmin, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.imax, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&domain.jmax, 1, MPI_INT, 0, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
 }
