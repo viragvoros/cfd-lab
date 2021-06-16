@@ -152,6 +152,9 @@ double &Fields::g(int i, int j) { return _G(i, j); }
 double &Fields::t(int i, int j) { return _T(i, j); }
 double &Fields::temp(int i, int j) { return _TEMP(i, j); }
 double &Fields::rs(int i, int j) { return _RS(i, j); }
+double &Fields::ca(int i, int j) { return _CA(i, j); }
+double &Fields::cb(int i, int j) { return _CB(i, j); }
+double &Fields::cc(int i, int j) { return _CC(i, j); }
 
 Matrix<double> &Fields::p_matrix() { return _P; }
 Matrix<double> &Fields::u_matrix() { return _U; }
@@ -159,6 +162,7 @@ Matrix<double> &Fields::v_matrix() { return _V; }
 Matrix<double> &Fields::f_matrix() { return _F; }
 Matrix<double> &Fields::g_matrix() { return _G; }
 Matrix<double> &Fields::t_matrix() { return _T; }
+
 
 double Fields::dt() const { return _dt; }
 double &Fields::u_avg() { return _u_avg; }

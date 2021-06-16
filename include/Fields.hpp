@@ -114,6 +114,12 @@ class Fields {
     /// temporary temperature index based access and modify
     double &temp(int i, int j);
 
+    /// concentration index based access and modify
+    double &ca(int i, int j);
+    double &cb(int i, int j);
+    double &cc(int i, int j);
+
+
     /// current mean of the u velocity field
     double &u_avg();
 
@@ -150,6 +156,11 @@ class Fields {
     /// g velocity matrix access and modify
     Matrix<double> &g_matrix();
 
+    /// concentrations matrices access and modify
+    Matrix<double> &ca_matrix();
+    Matrix<double> &cb_matrix();
+    Matrix<double> &cc_matrix();
+
     /// t velocity matrix access and modify
     Matrix<double> &t_matrix();
 
@@ -170,6 +181,11 @@ class Fields {
     Matrix<double> _T;
     /// temporary temperature update
     Matrix<double> _TEMP;
+    /// Concentration matrices for 3 different species
+    Matrix<double> _CA;
+    Matrix<double> _CB;
+    Matrix<double> _CC;
+
 
     /// kinematic viscosity
     double _nu;
