@@ -68,6 +68,8 @@ class InFlowBoundary : public Boundary {
   public:
     InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity);
     InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature);
+    InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_concentration_a, double inflow_concentration_b, double inflow_concentration_c);
+    InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature, double inflow_concentration_a, double inflow_concentration_b, double inflow_concentration_c);
     InFlowBoundary(std::vector<Cell *> cells, std::map<int, double> inflow_velocity,
                    std::map<int, double> inflow_temperature);
     virtual ~InFlowBoundary() = default;
@@ -77,6 +79,9 @@ class InFlowBoundary : public Boundary {
     std::vector<Cell *> _cells;
     std::map<int, double> _inflow_velocity;
     std::map<int, double> _inflow_temperature;
+    double _inflow_concentration_a;
+    double _inflow_concentration_b;
+    double _inflow_concentration_c;
 };
 
 /**
