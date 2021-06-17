@@ -80,20 +80,6 @@ class Grid {
     const std::vector<Cell *> &fixed_wall_cells_3() const;
 
     /**
-     * @brief Access fixed wall cells 4
-     *
-     * @param[out] vector of fixed wall cells
-     */
-    const std::vector<Cell *> &fixed_wall_cells_4() const;
-
-    /**
-     * @brief Access fixed wall cells 5
-     *
-     * @param[out] vector of fixed wall cells
-     */
-    const std::vector<Cell *> &fixed_wall_cells_5() const;
-
-    /**
      * @brief Access fixed wall cells 6
      *
      * @param[out] vector of fixed wall cells
@@ -139,8 +125,6 @@ class Grid {
     std::vector<Cell *> _inflow_cells;
     std::vector<Cell *> _outflow_cells;
     std::vector<Cell *> _fixed_wall_cells_3;
-    std::vector<Cell *> _fixed_wall_cells_4;
-    std::vector<Cell *> _fixed_wall_cells_5;
     std::vector<Cell *> _fluidbuffer_cells;
     std::vector<Cell *> _free_slip_cells;
     std::vector<Cell *> _moving_wall_cells;

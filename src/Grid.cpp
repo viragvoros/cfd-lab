@@ -132,11 +132,11 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
                 _cells(i, j) = Cell(i, j, cell_type::WALL_3, geometry_data.at(i_geom).at(j_geom));
                 _fixed_wall_cells_3.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 4) {
-                _cells(i, j) = Cell(i, j, cell_type::WALL_4, geometry_data.at(i_geom).at(j_geom));
-                _fixed_wall_cells_4.push_back(&_cells(i, j));
+                _cells(i, j) = Cell(i, j, cell_type::INFLOW, geometry_data.at(i_geom).at(j_geom));
+                _inflow_cells.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 5) {
-                _cells(i, j) = Cell(i, j, cell_type::WALL_5, geometry_data.at(i_geom).at(j_geom));
-                _fixed_wall_cells_5.push_back(&_cells(i, j));
+                _cells(i, j) = Cell(i, j, cell_type::INFLOW, geometry_data.at(i_geom).at(j_geom));
+                _inflow_cells.push_back(&_cells(i, j));
             } else if (geometry_data.at(i_geom).at(j_geom) == 1) {
                 _cells(i, j) = Cell(i, j, cell_type::INFLOW, geometry_data.at(i_geom).at(j_geom));
                 _inflow_cells.push_back(&_cells(i, j));
@@ -380,10 +380,6 @@ const std::vector<std::vector<int>> &Grid::get_geometry_data() const { return ge
 const std::vector<Cell *> &Grid::fluid_cells() const { return _fluid_cells; }
 
 const std::vector<Cell *> &Grid::fixed_wall_cells_3() const { return _fixed_wall_cells_3; }
-
-const std::vector<Cell *> &Grid::fixed_wall_cells_4() const { return _fixed_wall_cells_4; }
-
-const std::vector<Cell *> &Grid::fixed_wall_cells_5() const { return _fixed_wall_cells_5; }
 
 const std::vector<Cell *> &Grid::fluidbuffer_cells() const { return _fluidbuffer_cells; }
 

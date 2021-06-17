@@ -35,7 +35,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     double CCI{0};
     double CAIN{0};
     double CBIN{0};
-    double CCIN{0};
     double GX;        /* gravitation x-direction */
     double GY;        /* gravitation y-direction */
     double xlength;   /* length of the domain x-dir.*/
@@ -86,7 +85,6 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "CCI") file >> CCI;
                 if (var == "CAIN") file >> CAIN;
                 if (var == "CBIN") file >> CBIN;
-                if (var == "CCIN") file >> CCIN;
                 if (var == "itermax") file >> itermax;
                 if (var == "imax") file >> imax;
                 if (var == "jmax") file >> jmax;
@@ -133,11 +131,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     } else {
         // Construct maps of ids and velocities/temperatures for constructors of boundaries
         wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
-        wall_vel[boundary_ids::fixed_wall_cell_4_id] = wall_vel_4;
-        wall_vel[boundary_ids::fixed_wall_cell_5_id] = wall_vel_5;
         wall_temp[boundary_ids::fixed_wall_cell_3_id] = wall_temp_3;
-        wall_temp[boundary_ids::fixed_wall_cell_4_id] = wall_temp_4;
-        wall_temp[boundary_ids::fixed_wall_cell_5_id] = wall_temp_5;
     }
 
     // Set file names for geometry file and output directory
@@ -174,14 +168,8 @@ Case::Case(std::string file_name, int argn, char **args) {
     if (not _grid.fixed_wall_cells_3().empty()) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp));
     }
-    if (not _grid.fixed_wall_cells_4().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_4(), wall_temp));
-    }
-    if (not _grid.fixed_wall_cells_5().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp));
-    }
     if (not _grid.inflow_cells().empty()) {
-        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN, CAIN, CBIN, CCIN));
+        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN, CAIN, CBIN));
     }
     if (not _grid.outflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), PI));

@@ -28,10 +28,10 @@ enum class cell_type {
 
     FLUID,        // 0
     INFLOW,       // 1
+    INLET_A,      // 4, considered an inflow cell
+    INLET_B,      // 5, considered an inflow cell
     OUTFLOW,      // 2
     WALL_3,       // 3
-    WALL_4,       // 4
-    WALL_5,       // 5
     FLUID_BUFFER, // 6
     FREE_SLIP,    // 7
     MOVING_WALL,  // 8
@@ -43,8 +43,8 @@ const int fluid_cell_id = 0;
 const int inflow_cell_id = 1;
 const int outflow_cell_id = 2;
 const int fixed_wall_cell_3_id = 3;
-const int fixed_wall_cell_4_id = 4;
-const int fixed_wall_cell_5_id = 5;
+const int inlet_a_cell_id = 4;
+const int inlet_b_cell_id = 5;
 const int fluidbuffer_cell_id = 6;
 const int free_slip_cell_id = 7;
 const int moving_wall_cell_id = 8;

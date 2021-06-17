@@ -69,10 +69,15 @@ VI           0.0
 
 #--------------------------------------------
 #       Material Transport
+# CAIN: inlet concentration of species A
+# CBIN: inlet concentration of species B
+# CAI: initial concentration of species A
+# CBI: initial concentration of species B
+# CCI: initial concentration of species C
+# diffusivity: diffusion coefficient
 #--------------------------------------------
 CAIN           1.0
 CBIN           1.0
-CCIN           1.0
 
 
 CAI           0.0
@@ -84,5 +89,5 @@ diffusivity   0.001
 #--------------------------------------------
 #       inlet velocity
 #--------------------------------------------
-UIN          0.2
+UIN          1.0
 VIN          0.0

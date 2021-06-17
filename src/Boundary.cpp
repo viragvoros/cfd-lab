@@ -306,14 +306,19 @@ InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity
     _inflow_temperature.insert(std::pair(boundary_ids::inflow_cell_id, inflow_temperature));
 }
 
-InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_concentration_a, double inflow_concentration_b, double inflow_concentration_c)
-    : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b), _inflow_concentration_c(inflow_concentration_c) {
+InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_concentration_a, double inflow_concentration_b)
+    : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b) {
     _inflow_velocity.insert(std::pair(boundary_ids::inflow_cell_id, inflow_velocity));
+    _inflow_velocity.insert(std::pair(boundary_ids::inlet_a_cell_id, inflow_velocity));
+    _inflow_velocity.insert(std::pair(boundary_ids::inlet_b_cell_id, inflow_velocity));
 }
 
-InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature, double inflow_concentration_a, double inflow_concentration_b, double inflow_concentration_c)
-    : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b), _inflow_concentration_c(inflow_concentration_c) {
+InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature, double inflow_concentration_a, double inflow_concentration_b)
+    : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b) {
     _inflow_velocity.insert(std::pair(boundary_ids::inflow_cell_id, inflow_velocity));
+    _inflow_velocity.insert(std::pair(boundary_ids::inlet_a_cell_id, inflow_velocity));
+    _inflow_velocity.insert(std::pair(boundary_ids::inlet_b_cell_id, inflow_velocity));
+
     _inflow_temperature.insert(std::pair(boundary_ids::inflow_cell_id, inflow_temperature));
 }
 
@@ -337,10 +342,17 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                field.ca(i, j) = _inflow_concentration_a;
-                field.cb(i, j) = _inflow_concentration_b;
-                field.cc(i, j) = _inflow_concentration_c;
-
+                if (id == 4) {
+                    field.ca(i, j) = _inflow_concentration_a;
+                    field.cb(i, j) = 0;
+                    field.cc(i, j) = 0; 
+                }
+                else if (id == 5) {
+                    field.ca(i, j) = 0;
+                    field.cb(i, j) = _inflow_concentration_b;
+                    field.cc(i, j) = 0; 
+                }
+            
                 if (!_inflow_temperature.empty()) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i, j + 1);
                 }
@@ -351,9 +363,16 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                field.ca(i, j) = _inflow_concentration_a;
-                field.cb(i, j) = _inflow_concentration_b;
-                field.cc(i, j) = _inflow_concentration_c;
+                if (id == 4) {
+                    field.ca(i, j) = _inflow_concentration_a;
+                    field.cb(i, j) = 0;
+                    field.cc(i, j) = 0; 
+                }
+                else if (id == 5) {
+                    field.ca(i, j) = 0;
+                    field.cb(i, j) = _inflow_concentration_b;
+                    field.cc(i, j) = 0; 
+                }
 
                 if (!_inflow_temperature.empty()) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i, j - 1);
@@ -365,24 +384,39 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                field.ca(i, j) = _inflow_concentration_a;
-                field.cb(i, j) = _inflow_concentration_b;
-                field.cc(i, j) = _inflow_concentration_c;
+                if (id == 4) {
+                    field.ca(i, j) = _inflow_concentration_a;
+                    field.cb(i, j) = 0;
+                    field.cc(i, j) = 0; 
+                }
+                else if (id == 5) {
+                    field.ca(i, j) = 0;
+                    field.cb(i, j) = _inflow_concentration_b;
+                    field.cc(i, j) = 0; 
+                }
 
                 if (!_inflow_temperature.empty()) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i - 1, j);
                 }
             } else if (cell_borders[0] == border_position::RIGHT) { // Border is in RIGHT position
                 field.u(i, j) = _inflow_velocity[id];
-                // std::cout << id << std::endl;
                 field.v(i, j) = -field.v(i + 1, j);
                 field.p(i, j) = field.p(i + 1, j);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                field.ca(i, j) = _inflow_concentration_a;
-                field.cb(i, j) = _inflow_concentration_b;
-                field.cc(i, j) = _inflow_concentration_c;
+                
+                if (id == 4) {
+                    field.ca(i, j) = _inflow_concentration_a;
+                    field.cb(i, j) = 0;
+                    field.cc(i, j) = 0; 
+                }
+                else if (id == 5) {
+                    field.ca(i, j) = 0;
+                    field.cb(i, j) = _inflow_concentration_b;
+                    field.cc(i, j) = 0; 
+                }
+                
 
                 if (!_inflow_temperature.empty()) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i + 1, j);
