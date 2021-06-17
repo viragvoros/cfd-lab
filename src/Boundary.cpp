@@ -45,7 +45,6 @@ void FixedWallBoundary::apply(Fields &field) {
                     field.t(i, j) = field.t(i, j + 1);
                 }
 
-
             } else if (cell_borders[0] ==
                        border_position::BOTTOM) { // Border is in BOTTOM position (fluid cell under ghost cell)
                 field.u(i, j) = -field.u(i, j - 1);
@@ -195,24 +194,6 @@ void FixedWallBoundary::apply(Fields &field) {
             }
         }
     }
-
-    /*
-    // DEBUG: Printig fields to console
-    std::cout << "---------------------- u field ------------------------------" << std::endl;
-    for (int jx = 0; jx < 22; jx++ ){
-        for (int ix = 0; ix < 73; ix++) {
-            std::cout << _field.u(ix, jx) << " " ;
-        }
-        std::cout << "\n";
-    }
-    std::cout << "---------------------- v field ------------------------------" << std::endl;
-    for (int jx = 0; jx < 22; jx++ ){
-        for (int ix = 0; ix < 73; ix++) {
-            std::cout << _field.v(ix, jx) << " " ;
-        }
-        std::cout << "\n";
-    }
-    */
 }
 
 MovingWallBoundary::MovingWallBoundary(std::vector<Cell *> cells, double wall_velocity) : _cells(cells) {
@@ -271,7 +252,7 @@ void MovingWallBoundary::apply(Fields &field) {
 
                 field.ca(i, j) = field.ca(i - 1, j);
                 field.cb(i, j) = field.cb(i - 1, j);
-                field.cc(i, j) = field.cc(i - 1, j); 
+                field.cc(i, j) = field.cc(i - 1, j);
 
                 if (!_wall_temperature.empty()) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i - 1, j);
@@ -306,14 +287,16 @@ InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity
     _inflow_temperature.insert(std::pair(boundary_ids::inflow_cell_id, inflow_temperature));
 }
 
-InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_concentration_a, double inflow_concentration_b)
+InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_concentration_a,
+                               double inflow_concentration_b)
     : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b) {
     _inflow_velocity.insert(std::pair(boundary_ids::inflow_cell_id, inflow_velocity));
     _inflow_velocity.insert(std::pair(boundary_ids::inlet_a_cell_id, inflow_velocity));
     _inflow_velocity.insert(std::pair(boundary_ids::inlet_b_cell_id, inflow_velocity));
 }
 
-InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature, double inflow_concentration_a, double inflow_concentration_b)
+InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature,
+                               double inflow_concentration_a, double inflow_concentration_b)
     : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b) {
     _inflow_velocity.insert(std::pair(boundary_ids::inflow_cell_id, inflow_velocity));
     _inflow_velocity.insert(std::pair(boundary_ids::inlet_a_cell_id, inflow_velocity));
@@ -345,14 +328,13 @@ void InFlowBoundary::apply(Fields &field) {
                 if (id == 4) {
                     field.ca(i, j) = _inflow_concentration_a;
                     field.cb(i, j) = 0;
-                    field.cc(i, j) = 0; 
-                }
-                else if (id == 5) {
+                    field.cc(i, j) = 0;
+                } else if (id == 5) {
                     field.ca(i, j) = 0;
                     field.cb(i, j) = _inflow_concentration_b;
-                    field.cc(i, j) = 0; 
+                    field.cc(i, j) = 0;
                 }
-            
+
                 if (!_inflow_temperature.empty()) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i, j + 1);
                 }
@@ -366,12 +348,11 @@ void InFlowBoundary::apply(Fields &field) {
                 if (id == 4) {
                     field.ca(i, j) = _inflow_concentration_a;
                     field.cb(i, j) = 0;
-                    field.cc(i, j) = 0; 
-                }
-                else if (id == 5) {
+                    field.cc(i, j) = 0;
+                } else if (id == 5) {
                     field.ca(i, j) = 0;
                     field.cb(i, j) = _inflow_concentration_b;
-                    field.cc(i, j) = 0; 
+                    field.cc(i, j) = 0;
                 }
 
                 if (!_inflow_temperature.empty()) {
@@ -387,12 +368,11 @@ void InFlowBoundary::apply(Fields &field) {
                 if (id == 4) {
                     field.ca(i, j) = _inflow_concentration_a;
                     field.cb(i, j) = 0;
-                    field.cc(i, j) = 0; 
-                }
-                else if (id == 5) {
+                    field.cc(i, j) = 0;
+                } else if (id == 5) {
                     field.ca(i, j) = 0;
                     field.cb(i, j) = _inflow_concentration_b;
-                    field.cc(i, j) = 0; 
+                    field.cc(i, j) = 0;
                 }
 
                 if (!_inflow_temperature.empty()) {
@@ -405,18 +385,15 @@ void InFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
 
-                
                 if (id == 4) {
                     field.ca(i, j) = _inflow_concentration_a;
                     field.cb(i, j) = 0;
-                    field.cc(i, j) = 0; 
-                }
-                else if (id == 5) {
+                    field.cc(i, j) = 0;
+                } else if (id == 5) {
                     field.ca(i, j) = 0;
                     field.cb(i, j) = _inflow_concentration_b;
-                    field.cc(i, j) = 0; 
+                    field.cc(i, j) = 0;
                 }
-                
 
                 if (!_inflow_temperature.empty()) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i + 1, j);
@@ -473,7 +450,7 @@ void OutFlowBoundary::apply(Fields &field) {
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
                 field.t(i, j) = field.t(i - 1, j);
-                
+
                 field.ca(i, j) = field.ca(i - 1, j);
                 field.cb(i, j) = field.cb(i - 1, j);
                 field.cc(i, j) = field.cc(i - 1, j);

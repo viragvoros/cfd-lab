@@ -4,9 +4,11 @@
 #include <cmath>
 #include <iostream>
 
-Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity, std::vector<Cell *> cells, int imax,
-               int jmax, double UI, double VI, double PI, double TI, double CAI, double CBI, double CCI, std::string energy_eq, double GX, double GY)
-    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _cells(cells), _gx(GX), _gy(GY) {
+Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity,
+               std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
+               double CBI, double CCI, std::string energy_eq, double GX, double GY)
+    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _cells(cells), _gx(GX),
+      _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
@@ -23,9 +25,6 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, doub
     _TEMPCA = Matrix<double>(imax + 2, jmax + 2);
     _TEMPCB = Matrix<double>(imax + 2, jmax + 2);
     _TEMPCC = Matrix<double>(imax + 2, jmax + 2);
-
-
-
 
     _energy_eq = energy_eq;
 
@@ -44,9 +43,7 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, doub
 }
 
 void Fields::calculate_fluxes(Grid &grid) {
-    // std::cout << _energy_eq << std::endl;
     if (_energy_eq.compare("NONE") == 0) {
-        // std::cout << "NO_TEMP_FLUX" << std::endl;
         for (const auto &cell : _cells) {
             int i = cell->i();
             int j = cell->j();
@@ -57,7 +54,6 @@ void Fields::calculate_fluxes(Grid &grid) {
                                        Discretization::convection_v(_U, _V, i, j) + _gy);
         }
     } else {
-        // std::cout << "WITH_TEMP_FLUX" << std::endl;
         for (const auto &cell : _cells) {
             int i = cell->i();
             int j = cell->j();
@@ -101,7 +97,6 @@ void Fields::calculate_velocities(Grid &grid) {
              (grid.jmax() * (grid.imax() - 1)); // Calculate average to prepare for relative update calculation
 }
 
-
 // Function was implemented to copy matrices
 void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> &TO) {
     for (int i = 0; i <= (grid.imax() + 1); i++) {
@@ -113,7 +108,6 @@ void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> 
 
 void Fields::calculate_temperature(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
-        // std::cout << "CALC_TEMP" << std::endl;
         copy_matrix(grid, _T, _TEMP);
         for (const auto &cell : _cells) {
             int i = cell->i();
@@ -129,23 +123,20 @@ void Fields::calculate_temperature(Grid &grid) {
 }
 
 void Fields::calculate_concentrations(Grid &grid) {
+    copy_matrix(grid, _CA, _TEMPCA);
+    copy_matrix(grid, _CB, _TEMPCB);
+    copy_matrix(grid, _CC, _TEMPCC);
+    for (const auto &cell : _cells) {
+        int i = cell->i();
+        int j = cell->j();
 
-        copy_matrix(grid, _CA, _TEMPCA);
-        copy_matrix(grid, _CB, _TEMPCB);
-        copy_matrix(grid, _CC, _TEMPCC);
-
-        for (const auto &cell : _cells) {
-            int i = cell->i();
-            int j = cell->j();
-
-            ca(i, j) = tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
-                                          Discretization::convection_t(_TEMPCA, _U, _V, i, j));
-            cb(i, j) = tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
-                                             Discretization::convection_t(_TEMPCB, _U, _V, i, j));
-            cc(i, j) = tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
-                                             Discretization::convection_t(_TEMPCC, _U, _V, i, j));
-        }
-
+        ca(i, j) = tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
+                                         Discretization::convection_t(_TEMPCA, _U, _V, i, j));
+        cb(i, j) = tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
+                                         Discretization::convection_t(_TEMPCB, _U, _V, i, j));
+        cc(i, j) = tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
+                                         Discretization::convection_t(_TEMPCC, _U, _V, i, j));
+    }
 }
 
 // Function was implemented to get maximum value of matrix
@@ -167,10 +158,8 @@ double Fields::calculate_dt(Grid &grid, const double &max_u, const double &max_v
     double max_dt;
 
     if (_energy_eq.compare("NONE") == 0) {
-        // std::cout << "NO_TEMP_DT" << std::endl;
         max_dt = _tau * std::min({val_1, val_2, val_3});
     } else {
-        // std::cout << "WITH_TEMP_DT" << std::endl;
         double val_4 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
         max_dt = _tau * std::min({val_1, val_2, val_3, val_4});
     }
@@ -202,7 +191,6 @@ Matrix<double> &Fields::t_matrix() { return _T; }
 Matrix<double> &Fields::ca_matrix() { return _CA; }
 Matrix<double> &Fields::cb_matrix() { return _CB; }
 Matrix<double> &Fields::cc_matrix() { return _CC; }
-
 
 double Fields::dt() const { return _dt; }
 double &Fields::u_avg() { return _u_avg; }

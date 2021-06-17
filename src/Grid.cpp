@@ -10,7 +10,6 @@
 
 Grid::Grid(std::string geom_name, Domain &domain) {
     _domain = domain;
-
     _cells = Matrix<Cell>(_domain.size_x + 2, _domain.size_y + 2);
 
     if (geom_name.compare("NONE")) {
@@ -18,32 +17,6 @@ Grid::Grid(std::string geom_name, Domain &domain) {
         parse_geometry_file(geom_name, geom_data);
         assign_cell_types(geom_data);
         geometry_data = geom_data;
-
-        /*
-        // --------------- DEBUG: Printing grid and process domain data ------------------------
-        int rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        if(rank == 0){
-            for (int j = 0 ; j <= _domain.size_y + 1; j++ ){
-                for (int i = 0; i <= _domain.size_x + 1; i++) {
-                    if (_cells(i,j).type() == cell_type::FLUID_BUFFER) {
-                        std::cout << "x" << " " ;
-                    } else {
-                        std::cout << geometry_data.at(i).at(j) << " " ;
-                    }
-                }
-                std::cout << "\n";
-            }
-        } else {
-            std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  "-" << _domain.imax << std::endl;
-            std::cout << "J IN RANK " << rank << ": " << _domain.jmin << "-" << _domain.jmax << std::endl;
-            std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
-            std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
-            std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
-            std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
-        }
-        */
-
     } else {
         build_lid_driven_cavity();
     }
@@ -80,35 +53,9 @@ void Grid::build_lid_driven_cavity() {
     }
 
     assign_cell_types(geometry_data);
-
-    /*
-    // --------------- DEBUG: Printing grid and process domain data ------------------------
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if(rank == 0){
-        for (int j = 0 ; j <= _domain.size_y + 1; j++ ){
-            for (int i = 0; i <= _domain.size_x + 1; i++) {
-                if (_cells(i,j).type() == cell_type::FLUID_BUFFER) {
-                    std::cout << "x" << " " ;
-                } else {
-                    std::cout << geometry_data.at(i).at(j) << " " ;
-                }
-            }
-            std::cout << "\n";
-        }
-    } else {
-        std::cout << "I IN RANK " << rank << ": " << _domain.imin <<  "-" << _domain.imax << std::endl;
-        std::cout << "J IN RANK " << rank << ": " << _domain.jmin << "-" << _domain.jmax << std::endl;
-        std::cout << "X SIZE IN RANK " << rank << ": " << _domain.size_x << std::endl;
-        std::cout << "Y SIZE IN RANK " << rank << ": " << _domain.size_y << std::endl;
-        std::cout << "X SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_x << std::endl;
-        std::cout << "Y SIZE DOMAIN IN RANK " << rank << ": " << _domain.domain_size_y << std::endl;
-    }
-    */
 }
 
 void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
-
     int i = 0;
     int j = 0;
 
@@ -347,7 +294,6 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
     for (int col = numcols - 1; col > -1; --col) {
         for (int row = 0; row < numrows; ++row) {
             ss >> array[row][col];
-            ;
         }
     }
 

@@ -104,7 +104,7 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
         }
     }
 
-    if (iproc != 1) { //(own_rank%iproc != 0) || ((own_rank+1)%iproc != 0 )){
+    if (iproc != 1) {
         //----------------------------------------------------------------
         // From RIGHT rank to LEFT rank
         //----------------------------------------------------------------
@@ -151,24 +151,6 @@ void Communication::communicate(Matrix<double> &A, Domain &domain, int &iproc, i
                 A(domain.size_x + 1, i) = receive_lr_y[i];
             }
         }
-
-        // if (own_rank == 0){
-        //
-        //    std::cout << "------------------Array --------------------\n" << std::endl;
-        //
-        //    for (int j = 0 ; j <= domain.size_y + 1; j++ ){
-        ////        for (int i = 0; i <= domain.size_x + 1; i++) {
-        ////
-        ////            std::cout << A(i,j) << " " ;
-        ////
-        ////        }
-        ////        std::cout << "\n";
-        //        std::cout << receive_lr_y[j] << " ";
-        //
-        //
-        //    }
-        //    std::cout << "End of array\n" << std::endl;
-        //}
 
         //----------------------------------------------------------------
         // From LEFT rank to RIGHT rank

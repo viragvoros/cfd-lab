@@ -26,35 +26,35 @@ Case::Case(std::string file_name, int argn, char **args) {
     // Read input parameters
     const int MAX_LINE_LENGTH = 1024;
     std::ifstream file(file_name);
-    double nu;        /* viscosity   */
-    double UI;        /* velocity x-direction */
-    double VI;        /* velocity y-direction */
-    double PI;        /* pressure */
-    double CAI{0};   /* Initial concentrations  */
-    double CBI{0};
-    double CCI{0};
-    double CAIN{0};
-    double CBIN{0};
-    double GX;        /* gravitation x-direction */
-    double GY;        /* gravitation y-direction */
-    double xlength;   /* length of the domain x-dir.*/
-    double ylength;   /* length of the domain y-dir.*/
-    double dt;        /* time step */
-    int imax;         /* number of cells x-direction*/
-    int jmax;         /* number of cells y-direction*/
-    double gamma;     /* uppwind differencing factor*/
-    double omg;       /* relaxation factor */
-    double tau;       /* safety factor for time step*/
-    int itermax;      /* max. number of iterations for pressure per time step */
-    double eps;       /* accuracy bound for pressure*/
-    double UIN;       /* inlet velocity x-direction */
-    double VIN;/* inlet velocity y-direction */
-    int num_of_walls; /* number of walls */
-    double TI;        /* initial temperature */
-    double TIN;       /* inlet temperature */
-    double beta;      /* thermal expansion coefficient */
-    double alpha;     /* thermal diffusivity */
-    double diffusivity;          /* diffusivity */
+    double nu;          /* viscosity   */
+    double UI;          /* velocity x-direction */
+    double VI;          /* velocity y-direction */
+    double PI;          /* pressure */
+    double CAI{0};      /* initial concentration of component A */
+    double CBI{0};      /* initial concentration of component B */
+    double CCI{0};      /* initial concentration of component C */
+    double CAIN{0};     /* inlet concentration of component A */
+    double CBIN{0};     /* inlet concentration of component B */
+    double GX;          /* gravitation x-direction */
+    double GY;          /* gravitation y-direction */
+    double xlength;     /* length of the domain x-dir.*/
+    double ylength;     /* length of the domain y-dir.*/
+    double dt;          /* time step */
+    int imax;           /* number of cells x-direction*/
+    int jmax;           /* number of cells y-direction*/
+    double gamma;       /* uppwind differencing factor*/
+    double omg;         /* relaxation factor */
+    double tau;         /* safety factor for time step*/
+    int itermax;        /* max. number of iterations for pressure per time step */
+    double eps;         /* accuracy bound for pressure*/
+    double UIN;         /* inlet velocity x-direction */
+    double VIN;         /* inlet velocity y-direction */
+    int num_of_walls;   /* number of walls */
+    double TI;          /* initial temperature */
+    double TIN;         /* inlet temperature */
+    double beta;        /* thermal expansion coefficient */
+    double alpha;       /* thermal diffusivity */
+    double diffusivity; /* diffusivity */
 
     if (file.is_open()) {
 
@@ -138,7 +138,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     set_file_names(file_name);
 
     // Build up the domain
-    // Domain domain;
     domain.dx = xlength / (double)imax; // physical length of one cell
     domain.dy = ylength / (double)jmax;
     domain.domain_size_x = imax; // global domain size x (amount of cells in x direction) without the ghost cell frame
@@ -146,14 +145,9 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     build_domain(domain, imax, jmax);
 
-
-
-    // Communication communication;
-    // TODO modify dat and pgm files to read in concentration values
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
-                    PI, TI, CAI, CBI, CBI, energy_eq, GX, GY);
-
+    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, _grid.fluid_cells(), _grid.domain().size_x,
+                    _grid.domain().size_y, UI, VI, PI, TI, CAI, CBI, CBI, energy_eq, GX, GY);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg);
@@ -293,30 +287,21 @@ void Case::simulate() {
         }
 
         _field.calculate_temperature(_grid);
-
         _field.calculate_concentrations(_grid);
 
         _communication.communicate(_field.t_matrix(), domain, iproc, jproc);
-
         _communication.communicate(_field.ca_matrix(), domain, iproc, jproc);
         _communication.communicate(_field.cb_matrix(), domain, iproc, jproc);
         _communication.communicate(_field.cc_matrix(), domain, iproc, jproc);
 
         _field.calculate_fluxes(_grid);
 
-        /*
-        // --------------- DEBUG: Printing field matrix ------------------------
-        for(int i = 0; i < domain.size_x + 2; i++){
-        std::cout << _field.f_matrix(i,0) << std::endl;
-        }
-        */
-
         // Application of boundary conditions
         for (auto &boundary : _boundaries) {
             boundary->apply(_field);
         }
-        // Communicate fluxes
 
+        // Communicate fluxes
         _communication.communicate(_field.f_matrix(), domain, iproc, jproc);
         _communication.communicate(_field.g_matrix(), domain, iproc, jproc);
 
@@ -456,8 +441,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 Pressure->InsertNextTuple(&pressure);
 
                 double concentration_a = _field.ca(i, j);
-                double concentration_b  = _field.cb(i, j);
-                double concentration_c  = _field.cc(i, j);
+                double concentration_b = _field.cb(i, j);
+                double concentration_c = _field.cc(i, j);
                 CA->InsertNextTuple(&concentration_a);
                 CB->InsertNextTuple(&concentration_b);
                 CC->InsertNextTuple(&concentration_c);
@@ -468,8 +453,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 Pressure->InsertNextTuple(&pressure);
 
                 double concentration_a = _field.ca(i, j);
-                double concentration_b  = _field.cb(i, j);
-                double concentration_c  = _field.cc(i, j);
+                double concentration_b = _field.cb(i, j);
+                double concentration_c = _field.cc(i, j);
                 CA->InsertNextTuple(&concentration_a);
                 CB->InsertNextTuple(&concentration_b);
                 CC->InsertNextTuple(&concentration_c);
@@ -478,8 +463,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 Pressure->InsertNextTuple(&pressure);
 
                 double concentration_a = 0;
-                double concentration_b  = 0;
-                double concentration_c  = 0;
+                double concentration_b = 0;
+                double concentration_c = 0;
                 CA->InsertNextTuple(&concentration_a);
                 CB->InsertNextTuple(&concentration_b);
                 CC->InsertNextTuple(&concentration_c);
@@ -514,7 +499,6 @@ void Case::output_vtk(int file_number, int my_rank) {
     float vel[3];
     vel[2] = 0; // Set z component to 0
 
-
     // Print Velocity from bottom to top
     for (int j = 0; j < _grid.domain().size_y + 1; j++) {
         for (int i = 0; i < _grid.domain().size_x + 1; i++) {
@@ -533,7 +517,6 @@ void Case::output_vtk(int file_number, int my_rank) {
                 vel[0] = 0;
                 vel[1] = 0;
                 Velocity->InsertNextTuple(vel);
-
             }
         }
     }
@@ -552,7 +535,6 @@ void Case::output_vtk(int file_number, int my_rank) {
     structuredGrid->GetCellData()->AddArray(CB);
     // Add Concentration to Structured Grid
     structuredGrid->GetCellData()->AddArray(CC);
-
 
     // Add Velocity to Structured Grid
     structuredGrid->GetPointData()->AddArray(Velocity);
