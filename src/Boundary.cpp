@@ -45,7 +45,7 @@ void FixedWallBoundary::apply(Fields &field) {
                     field.t(i, j) = field.t(i, j + 1);
                 }
 
-                if (!)
+
             } else if (cell_borders[0] ==
                        border_position::BOTTOM) { // Border is in BOTTOM position (fluid cell under ghost cell)
                 field.u(i, j) = -field.u(i, j - 1);
@@ -307,12 +307,12 @@ InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity
 }
 
 InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_concentration_a, double inflow_concentration_b, double inflow_concentration_c)
-    : _cells(cells), _inflow_concentration_a(_inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b), _inflow_concentration_c(inflow_concentration_c) {
+    : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b), _inflow_concentration_c(inflow_concentration_c) {
     _inflow_velocity.insert(std::pair(boundary_ids::inflow_cell_id, inflow_velocity));
 }
 
 InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity, double inflow_temperature, double inflow_concentration_a, double inflow_concentration_b, double inflow_concentration_c)
-    : _cells(cells), _inflow_concentration_a(_inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b), _inflow_concentration_c(inflow_concentration_c) {
+    : _cells(cells), _inflow_concentration_a(inflow_concentration_a), _inflow_concentration_b(inflow_concentration_b), _inflow_concentration_c(inflow_concentration_c) {
     _inflow_velocity.insert(std::pair(boundary_ids::inflow_cell_id, inflow_velocity));
     _inflow_temperature.insert(std::pair(boundary_ids::inflow_cell_id, inflow_temperature));
 }

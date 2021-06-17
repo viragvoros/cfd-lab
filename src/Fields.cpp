@@ -4,9 +4,9 @@
 #include <cmath>
 #include <iostream>
 
-Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std::vector<Cell *> cells, int imax,
-               int jmax, double UI, double VI, double PI, double TI, std::string energy_eq, double GX, double GY)
-    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _cells(cells), _gx(GX), _gy(GY) {
+Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity, std::vector<Cell *> cells, int imax,
+               int jmax, double UI, double VI, double PI, double TI, double CAI, double CBI, double CCI, std::string energy_eq, double GX, double GY)
+    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _cells(cells), _gx(GX), _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
@@ -16,6 +16,16 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
     _F = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _G = Matrix<double>(imax + 2, jmax + 2, 0.0);
     _RS = Matrix<double>(imax + 2, jmax + 2, 0.0);
+
+    _CA = Matrix<double>(imax + 2, jmax + 2);
+    _CB = Matrix<double>(imax + 2, jmax + 2);
+    _CC = Matrix<double>(imax + 2, jmax + 2);
+    _TEMPCA = Matrix<double>(imax + 2, jmax + 2);
+    _TEMPCB = Matrix<double>(imax + 2, jmax + 2);
+    _TEMPCC = Matrix<double>(imax + 2, jmax + 2);
+
+
+
 
     _energy_eq = energy_eq;
 
@@ -27,6 +37,9 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, std:
         v(i, j) = VI;
         p(i, j) = PI;
         t(i, j) = TI;
+        ca(i, j) = CAI;
+        cb(i, j) = CBI;
+        cc(i, j) = CCI;
     }
 }
 
@@ -88,6 +101,7 @@ void Fields::calculate_velocities(Grid &grid) {
              (grid.jmax() * (grid.imax() - 1)); // Calculate average to prepare for relative update calculation
 }
 
+
 // Function was implemented to copy matrices
 void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> &TO) {
     for (int i = 0; i <= (grid.imax() + 1); i++) {
@@ -112,6 +126,26 @@ void Fields::calculate_temperature(Grid &grid) {
         _t_avg = std::sqrt(_t_avg) /
                  (grid.jmax() * (grid.imax() - 1)); // Calculate average to prepare for relative update calculation
     }
+}
+
+void Fields::calculate_concentrations(Grid &grid) {
+
+        copy_matrix(grid, _CA, _TEMPCA);
+        copy_matrix(grid, _CB, _TEMPCB);
+        copy_matrix(grid, _CC, _TEMPCC);
+
+        for (const auto &cell : _cells) {
+            int i = cell->i();
+            int j = cell->j();
+
+            ca(i, j) = tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
+                                          Discretization::convection_t(_TEMPCA, _U, _V, i, j));
+            cb(i, j) = tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
+                                             Discretization::convection_t(_TEMPCB, _U, _V, i, j));
+            cc(i, j) = tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
+                                             Discretization::convection_t(_TEMPCC, _U, _V, i, j));
+        }
+
 }
 
 // Function was implemented to get maximum value of matrix
@@ -155,6 +189,9 @@ double &Fields::rs(int i, int j) { return _RS(i, j); }
 double &Fields::ca(int i, int j) { return _CA(i, j); }
 double &Fields::cb(int i, int j) { return _CB(i, j); }
 double &Fields::cc(int i, int j) { return _CC(i, j); }
+double &Fields::tempca(int i, int j) { return _TEMPCA(i, j); }
+double &Fields::tempcb(int i, int j) { return _TEMPCB(i, j); }
+double &Fields::tempcc(int i, int j) { return _TEMPCC(i, j); }
 
 Matrix<double> &Fields::p_matrix() { return _P; }
 Matrix<double> &Fields::u_matrix() { return _U; }
@@ -162,6 +199,9 @@ Matrix<double> &Fields::v_matrix() { return _V; }
 Matrix<double> &Fields::f_matrix() { return _F; }
 Matrix<double> &Fields::g_matrix() { return _G; }
 Matrix<double> &Fields::t_matrix() { return _T; }
+Matrix<double> &Fields::ca_matrix() { return _CA; }
+Matrix<double> &Fields::cb_matrix() { return _CB; }
+Matrix<double> &Fields::cc_matrix() { return _CC; }
 
 
 double Fields::dt() const { return _dt; }

@@ -25,8 +25,8 @@ class Fields {
      * @param[in] initial pressure
      *
      */
-    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, std::vector<Cell *> cells, int imax,
-           int jmax, double UI, double VI, double PI, double TI, std::string _energy_eq, double GX, double GY);
+    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity, std::vector<Cell *> cells, int imax,
+           int jmax, double UI, double VI, double PI, double TI, double CAI, double CBI, double CCI, std::string _energy_eq, double GX, double GY);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
@@ -53,6 +53,14 @@ class Fields {
      *
      */
     void calculate_velocities(Grid &grid);
+
+    /**
+     * @brief Concentrations calculation using pressure values
+     *
+     * @param[in] grid in which the calculations are done
+     *
+     */
+    void calculate_concentrations(Grid &grid);
 
     /**
      * @brief Copying matrices
@@ -119,6 +127,10 @@ class Fields {
     double &cb(int i, int j);
     double &cc(int i, int j);
 
+    /// temporary concentration index based access and modify
+    double &tempca(int i, int j);
+    double &tempcb(int i, int j);
+    double &tempcc(int i, int j);
 
     /// current mean of the u velocity field
     double &u_avg();
@@ -185,6 +197,11 @@ class Fields {
     Matrix<double> _CA;
     Matrix<double> _CB;
     Matrix<double> _CC;
+    /// temporary concentrations for updating
+    Matrix<double> _TEMPCA;
+    Matrix<double> _TEMPCB;
+    Matrix<double> _TEMPCC;
+
 
 
     /// kinematic viscosity
@@ -201,6 +218,8 @@ class Fields {
     double _alpha;
     /// thermal expansion coefficient
     double _beta;
+    /// diffusivity
+    double _diffusivity;
 
     /// fluid cells
     std::vector<Cell *> _cells;

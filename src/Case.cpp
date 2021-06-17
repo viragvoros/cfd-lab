@@ -30,6 +30,12 @@ Case::Case(std::string file_name, int argn, char **args) {
     double UI;        /* velocity x-direction */
     double VI;        /* velocity y-direction */
     double PI;        /* pressure */
+    double CAI{0};   /* Initial concentrations  */
+    double CBI{0};
+    double CCI{0};
+    double CAIN{0};
+    double CBIN{0};
+    double CCIN{0};
     double GX;        /* gravitation x-direction */
     double GY;        /* gravitation y-direction */
     double xlength;   /* length of the domain x-dir.*/
@@ -43,12 +49,13 @@ Case::Case(std::string file_name, int argn, char **args) {
     int itermax;      /* max. number of iterations for pressure per time step */
     double eps;       /* accuracy bound for pressure*/
     double UIN;       /* inlet velocity x-direction */
-    double VIN;       /* inlet velocity y-direction */
+    double VIN;/* inlet velocity y-direction */
     int num_of_walls; /* number of walls */
     double TI;        /* initial temperature */
     double TIN;       /* inlet temperature */
     double beta;      /* thermal expansion coefficient */
     double alpha;     /* thermal diffusivity */
+    double diffusivity;          /* diffusivity */
 
     if (file.is_open()) {
 
@@ -74,6 +81,12 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "GX") file >> GX;
                 if (var == "GY") file >> GY;
                 if (var == "PI") file >> PI;
+                if (var == "CAI") file >> CAI;
+                if (var == "CBI") file >> CBI;
+                if (var == "CCI") file >> CCI;
+                if (var == "CAIN") file >> CAIN;
+                if (var == "CBIN") file >> CBIN;
+                if (var == "CCIN") file >> CCIN;
                 if (var == "itermax") file >> itermax;
                 if (var == "imax") file >> imax;
                 if (var == "jmax") file >> jmax;
@@ -87,6 +100,7 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "TIN") file >> TIN;
                 if (var == "beta") file >> beta;
                 if (var == "alpha") file >> alpha;
+                if (var == "diffusivity") file >> diffusivity;
                 if (var == "wall_temp_3") file >> wall_temp_3;
                 if (var == "wall_temp_4") file >> wall_temp_4;
                 if (var == "wall_temp_5") file >> wall_temp_5;
@@ -138,11 +152,14 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     build_domain(domain, imax, jmax);
 
-    // Communication communication;
 
+
+    // Communication communication;
+    // TODO modify dat and pgm files to read in concentration values
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
-                    PI, TI, energy_eq, GX, GY);
+    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI,
+                    PI, TI, CAI, CBI, CBI, energy_eq, GX, GY);
+
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg);
@@ -164,7 +181,7 @@ Case::Case(std::string file_name, int argn, char **args) {
         _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_5(), wall_temp));
     }
     if (not _grid.inflow_cells().empty()) {
-        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN));
+        _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN, CAIN, CBIN, CCIN));
     }
     if (not _grid.outflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<OutFlowBoundary>(_grid.outflow_cells(), PI));
@@ -289,7 +306,13 @@ void Case::simulate() {
 
         _field.calculate_temperature(_grid);
 
+        _field.calculate_concentrations(_grid);
+
         _communication.communicate(_field.t_matrix(), domain, iproc, jproc);
+
+        _communication.communicate(_field.ca_matrix(), domain, iproc, jproc);
+        _communication.communicate(_field.cb_matrix(), domain, iproc, jproc);
+        _communication.communicate(_field.cc_matrix(), domain, iproc, jproc);
 
         _field.calculate_fluxes(_grid);
 
@@ -422,19 +445,56 @@ void Case::output_vtk(int file_number, int my_rank) {
     Velocity->SetName("velocity");
     Velocity->SetNumberOfComponents(3);
 
+    // Concentration A Array
+    vtkDoubleArray *CA = vtkDoubleArray::New();
+    CA->SetName("concentration_a");
+    CA->SetNumberOfComponents(1);
+
+    // Concentration B Array
+    vtkDoubleArray *CB = vtkDoubleArray::New();
+    CB->SetName("concentration_b");
+    CB->SetNumberOfComponents(1);
+
+    // Concentration C Array
+    vtkDoubleArray *CC = vtkDoubleArray::New();
+    CC->SetName("concentration_c");
+    CC->SetNumberOfComponents(1);
+
     // Print pressure and temperature from bottom to top
     for (int j = 1; j < _grid.domain().size_y + 1; j++) {
         for (int i = 1; i < _grid.domain().size_x + 1; i++) {
             if (_geom_name.compare("NONE") == 0) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
+
+                double concentration_a = _field.ca(i, j);
+                double concentration_b  = _field.cb(i, j);
+                double concentration_c  = _field.cc(i, j);
+                CA->InsertNextTuple(&concentration_a);
+                CB->InsertNextTuple(&concentration_b);
+                CC->InsertNextTuple(&concentration_c);
+
             } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
                        _grid.get_geometry_data().at(i).at(j) == 2) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
+
+                double concentration_a = _field.ca(i, j);
+                double concentration_b  = _field.cb(i, j);
+                double concentration_c  = _field.cc(i, j);
+                CA->InsertNextTuple(&concentration_a);
+                CB->InsertNextTuple(&concentration_b);
+                CC->InsertNextTuple(&concentration_c);
             } else {
                 double pressure = 0;
                 Pressure->InsertNextTuple(&pressure);
+
+                double concentration_a = 0;
+                double concentration_b  = 0;
+                double concentration_c  = 0;
+                CA->InsertNextTuple(&concentration_a);
+                CB->InsertNextTuple(&concentration_b);
+                CC->InsertNextTuple(&concentration_c);
             }
 
             if (energy_eq.compare("NONE") != 0) {
@@ -466,6 +526,7 @@ void Case::output_vtk(int file_number, int my_rank) {
     float vel[3];
     vel[2] = 0; // Set z component to 0
 
+
     // Print Velocity from bottom to top
     for (int j = 0; j < _grid.domain().size_y + 1; j++) {
         for (int i = 0; i < _grid.domain().size_x + 1; i++) {
@@ -473,15 +534,18 @@ void Case::output_vtk(int file_number, int my_rank) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
+
             } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
                        _grid.get_geometry_data().at(i).at(j) == 2) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
+
             } else {
                 vel[0] = 0;
                 vel[1] = 0;
                 Velocity->InsertNextTuple(vel);
+
             }
         }
     }
@@ -493,6 +557,14 @@ void Case::output_vtk(int file_number, int my_rank) {
     if (energy_eq.compare("NONE") != 0) {
         structuredGrid->GetCellData()->AddArray(Temperature);
     }
+
+    // Add Concentration to Structured Grid
+    structuredGrid->GetCellData()->AddArray(CA);
+    // Add Concentration to Structured Grid
+    structuredGrid->GetCellData()->AddArray(CB);
+    // Add Concentration to Structured Grid
+    structuredGrid->GetCellData()->AddArray(CC);
+
 
     // Add Velocity to Structured Grid
     structuredGrid->GetPointData()->AddArray(Velocity);
