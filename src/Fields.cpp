@@ -155,13 +155,15 @@ double Fields::calculate_dt(Grid &grid, const double &max_u, const double &max_v
     double val_1 = (1 / (2 * _nu)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
     double val_2 = grid.dx() / std::abs(max_u);
     double val_3 = grid.dy() / std::abs(max_v);
+    double val_4 = (1 / (2 * _diffusivity)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
+
     double max_dt;
 
     if (_energy_eq.compare("NONE") == 0) {
-        max_dt = _tau * std::min({val_1, val_2, val_3});
-    } else {
-        double val_4 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
         max_dt = _tau * std::min({val_1, val_2, val_3, val_4});
+    } else {
+        double val_5 = (1 / (2 * _alpha)) * 1 / (1 / (grid.dx() * grid.dx()) + 1 / (grid.dy() * grid.dy()));
+        max_dt = _tau * std::min({val_1, val_2, val_3, val_4, val_5});
     }
     _dt = max_dt;
     return max_dt;
