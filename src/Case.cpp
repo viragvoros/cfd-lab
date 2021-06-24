@@ -152,8 +152,8 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, _grid.fluid_cells(), _grid.domain().size_x,
-                    _grid.domain().size_y, UI, VI, PI, TI, CAI, CBI, CBI, energy_eq, GX, GY);
+    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, _grid.fluid_cells(),
+                    _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI, CAI, CBI, CBI, energy_eq, GX, GY);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg);
@@ -500,7 +500,6 @@ void Case::output_vtk(int file_number, int my_rank) {
                 }
             }
         }
-
     }
 
     // Temp Velocity

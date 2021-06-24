@@ -25,10 +25,9 @@ class Fields {
      * @param[in] initial pressure
      *
      */
-    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity,
-           double rate_const, double order_a, double order_b,
-           std::vector<Cell *> fluid_cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
-           double CBI, double CCI, std::string _energy_eq, double GX, double GY);
+    Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity, double rate_const,
+           double order_a, double order_b, std::vector<Cell *> fluid_cells, int imax, int jmax, double UI, double VI,
+           double PI, double TI, double CAI, double CBI, double CCI, std::string _energy_eq, double GX, double GY);
 
     /**
      * @brief Calculates the convective and diffusive fluxes in x and y
@@ -82,7 +81,7 @@ class Fields {
     void calculate_temperature(Grid &grid);
 
     /**
-     * @brief Calculation of reaction kinetic based changes of concentrations 
+     * @brief Calculation of reaction kinetic based changes of concentrations
      *
      * @param[in] grid in which the calculations are done
      *
