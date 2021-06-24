@@ -340,7 +340,7 @@ void InFlowBoundary::apply(Fields &field) {
                 }
             } else if (cell_borders[0] == border_position::BOTTOM) { // Border is in BOTTOM position
                 field.u(i, j) = -field.u(i, j - 1);
-                field.v(i, j - 1) = -1;
+                field.v(i, j - 1) = -_inflow_velocity[id];
                 field.p(i, j) = field.p(i, j - 1);
                 field.f(i, j) = field.u(i, j);
                 field.g(i, j) = field.v(i, j);
@@ -359,7 +359,7 @@ void InFlowBoundary::apply(Fields &field) {
                     field.t(i, j) = 2 * _inflow_temperature[id] - field.t(i, j - 1);
                 }
             } else if (cell_borders[0] == border_position::LEFT) { // Border is in LEFT position
-                field.u(i - 1, j) = -1;
+                field.u(i - 1, j) = -_inflow_velocity[id];
                 field.v(i, j) = -field.v(i - 1, j);
                 field.p(i, j) = field.p(i - 1, j);
                 field.f(i, j) = field.u(i, j);
