@@ -236,7 +236,11 @@ class Fields {
     double _order_b;
 
     /// fluid cells
-    std::vector<Cell *> _cells;
+    std::vector<Cell *> _fluid_cells;
+
+    /// conversion cells
+    std::vector<Cell *> _conversion_cells;
+
     /// Heat energy on
     std::string _energy_eq{"NONE"};
     /// Average u velocity for relative update calculation
