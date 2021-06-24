@@ -26,6 +26,7 @@ class Fields {
      *
      */
     Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity,
+           double rate_const, double order_a, double order_b,
            std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
            double CBI, double CCI, std::string _energy_eq, double GX, double GY);
 
@@ -79,6 +80,14 @@ class Fields {
      *
      */
     void calculate_temperature(Grid &grid);
+
+    /**
+     * @brief Calculation of reaction kinetic based changes of concentrations 
+     *
+     * @param[in] grid in which the calculations are done
+     *
+     */
+    void react(Grid &grid);
 
     /**
      * @brief Adaptive step size calculation using x-velocity condition,
@@ -219,6 +228,12 @@ class Fields {
     double _beta;
     /// diffusivity
     double _diffusivity;
+    /// reaction rate constant
+    double _rate_const;
+    /// order of reaction with regard to A
+    double _order_a;
+    /// order of reaction with regard to B
+    double _order_b;
 
     /// fluid cells
     std::vector<Cell *> _cells;

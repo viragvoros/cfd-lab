@@ -55,6 +55,9 @@ Case::Case(std::string file_name, int argn, char **args) {
     double beta;        /* thermal expansion coefficient */
     double alpha;       /* thermal diffusivity */
     double diffusivity; /* diffusivity */
+    double rate_const;  /* reaction rate constant */
+    double order_a;     /* order of reaction with regard to A */
+    double order_b;     /* order of reaction with regard to B */
 
     if (file.is_open()) {
 
@@ -99,6 +102,9 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "beta") file >> beta;
                 if (var == "alpha") file >> alpha;
                 if (var == "diffusivity") file >> diffusivity;
+                if (var == "rate_const") file >> rate_const;
+                if (var == "order_a") file >> order_a;
+                if (var == "order_b") file >> order_b;
                 if (var == "wall_temp_3") file >> wall_temp_3;
                 if (var == "wall_temp_4") file >> wall_temp_4;
                 if (var == "wall_temp_5") file >> wall_temp_5;
@@ -146,7 +152,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, _grid.fluid_cells(), _grid.domain().size_x,
+    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, _grid.fluid_cells(), _grid.domain().size_x,
                     _grid.domain().size_y, UI, VI, PI, TI, CAI, CBI, CBI, energy_eq, GX, GY);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);

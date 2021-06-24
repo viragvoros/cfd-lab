@@ -5,10 +5,11 @@
 #include <iostream>
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity,
+               double rate_const, double order_a, double order_b,
                std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
                double CBI, double CCI, std::string energy_eq, double GX, double GY)
-    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _cells(cells), _gx(GX),
-      _gy(GY) {
+    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _rate_const(rate_const,
+     _order_a(order_a), _order_b(order_b), _cells(cells), _gx(GX), _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
@@ -136,6 +137,16 @@ void Fields::calculate_concentrations(Grid &grid) {
                                          Discretization::convection_t(_TEMPCB, _U, _V, i, j));
         cc(i, j) = tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
                                          Discretization::convection_t(_TEMPCC, _U, _V, i, j));
+    }
+}
+
+void Fields::react(Grid &grid) {
+    for (const auto cell : _conversion_cell) {
+        double tempca = ca(i,j);
+        double tempcb = cb(i,j);
+        cc(i,j) += rate_const * std::pow(tempca, order_a) * std::pow(tempcb, order_b);
+        ca(i,j) -= rate_const * std::pow(tempca, order_a) * std::pow(tempcb, order_b);
+        cb(i,j) -= rate_const * std::pow(tempca, order_a) * std::pow(tempcb, order_b);
     }
 }
 
