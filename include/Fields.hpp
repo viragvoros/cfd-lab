@@ -26,7 +26,7 @@ class Fields {
      *
      */
     Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity,
-           std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
+           std::vector<Cell *> fluid_cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
            double CBI, double CCI, std::string _energy_eq, double GX, double GY);
 
     /**
@@ -221,7 +221,11 @@ class Fields {
     double _diffusivity;
 
     /// fluid cells
-    std::vector<Cell *> _cells;
+    std::vector<Cell *> _fluid_cells;
+
+    /// conversion cells
+    std::vector<Cell *> _conversion_cells;
+
     /// Heat energy on
     std::string _energy_eq{"NONE"};
     /// Average u velocity for relative update calculation
