@@ -5,9 +5,9 @@
 #include <iostream>
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity,
-               std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
+               std::vector<Cell *> fluid_cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
                double CBI, double CCI, std::string energy_eq, double GX, double GY)
-    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _cells(cells), _gx(GX),
+    : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _fluid_cells(fluid_cells), _gx(GX),
       _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
@@ -28,7 +28,7 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, doub
 
     _energy_eq = energy_eq;
 
-    for (const auto &cell : _cells) {
+    for (const auto &cell : _fluid_cells) {
         int i = cell->i();
         int j = cell->j();
 
@@ -39,12 +39,16 @@ Fields::Fields(double nu, double dt, double tau, double alpha, double beta, doub
         ca(i, j) = CAI;
         cb(i, j) = CBI;
         cc(i, j) = CCI;
+
+        if (cell->cell_id() == 7){
+            _conversion_cells.push_back(cell);
+        }
     }
 }
 
 void Fields::calculate_fluxes(Grid &grid) {
     if (_energy_eq.compare("NONE") == 0) {
-        for (const auto &cell : _cells) {
+        for (const auto &cell : _fluid_cells) {
             int i = cell->i();
             int j = cell->j();
 
@@ -54,7 +58,7 @@ void Fields::calculate_fluxes(Grid &grid) {
                                        Discretization::convection_v(_U, _V, i, j) + _gy);
         }
     } else {
-        for (const auto &cell : _cells) {
+        for (const auto &cell : _fluid_cells) {
             int i = cell->i();
             int j = cell->j();
 
@@ -72,7 +76,7 @@ void Fields::calculate_fluxes(Grid &grid) {
 
 // Calculate right-hand-side of PPE
 void Fields::calculate_rs(Grid &grid) {
-    for (const auto &cell : _cells) {
+    for (const auto &cell : _fluid_cells) {
         int i = cell->i();
         int j = cell->j();
 
@@ -81,7 +85,7 @@ void Fields::calculate_rs(Grid &grid) {
 }
 
 void Fields::calculate_velocities(Grid &grid) {
-    for (const auto &cell : _cells) {
+    for (const auto &cell : _fluid_cells) {
         int i = cell->i();
         int j = cell->j();
 
@@ -109,7 +113,7 @@ void Fields::copy_matrix(Grid &grid, const Matrix<double> &FROM, Matrix<double> 
 void Fields::calculate_temperature(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
         copy_matrix(grid, _T, _TEMP);
-        for (const auto &cell : _cells) {
+        for (const auto &cell : _fluid_cells) {
             int i = cell->i();
             int j = cell->j();
 
@@ -126,7 +130,7 @@ void Fields::calculate_concentrations(Grid &grid) {
     copy_matrix(grid, _CA, _TEMPCA);
     copy_matrix(grid, _CB, _TEMPCB);
     copy_matrix(grid, _CC, _TEMPCC);
-    for (const auto &cell : _cells) {
+    for (const auto &cell : _fluid_cells) {
         int i = cell->i();
         int j = cell->j();
 
@@ -142,7 +146,7 @@ void Fields::calculate_concentrations(Grid &grid) {
 // Function was implemented to get maximum value of matrix
 double Fields::find_max(const Matrix<double> &M) {
     double maximum = 0;
-    for (const auto &cell : _cells) {
+    for (const auto &cell : _fluid_cells) {
         int i = cell->i();
         int j = cell->j();
         maximum = std::max(M(i, j), maximum);

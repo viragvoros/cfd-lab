@@ -16,7 +16,7 @@ void FixedWallBoundary::apply(Fields &field) {
         std::vector<border_position> cell_borders = cell->borders();
         int i = cell->i();
         int j = cell->j();
-        int id = cell->wall_id();
+        int id = cell->cell_id();
 
         if (cell_borders.empty()) { // Set all values of cells without a fluid neighbour to 0
             field.u(i, j) = 0;
@@ -209,7 +209,7 @@ void MovingWallBoundary::apply(Fields &field) {
         std::vector<border_position> cell_borders = cell->borders();
         int i = cell->i();
         int j = cell->j();
-        int id = cell->wall_id();
+        int id = cell->cell_id();
 
         if (cell_borders.size() == 1) {
 
@@ -314,7 +314,7 @@ void InFlowBoundary::apply(Fields &field) {
         std::vector<border_position> cell_borders = cell->borders();
         int i = cell->i();
         int j = cell->j();
-        int id = cell->wall_id();
+        int id = cell->cell_id();
 
         if (cell_borders.size() == 1) {
 
@@ -415,7 +415,7 @@ void OutFlowBoundary::apply(Fields &field) {
         std::vector<border_position> cell_borders = cell->borders();
         int i = cell->i();
         int j = cell->j();
-        int id = cell->wall_id();
+        int id = cell->cell_id();
 
         if (cell_borders.size() == 1) {
 
