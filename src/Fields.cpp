@@ -134,12 +134,12 @@ void Fields::calculate_concentrations(Grid &grid) {
         int i = cell->i();
         int j = cell->j();
 
-        ca(i, j) = tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
-                                         Discretization::convection_t(_TEMPCA, _U, _V, i, j));
-        cb(i, j) = tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
-                                         Discretization::convection_t(_TEMPCB, _U, _V, i, j));
-        cc(i, j) = tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
-                                         Discretization::convection_t(_TEMPCC, _U, _V, i, j));
+        ca(i, j) = std::abs(tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
+                                         Discretization::convection_t(_TEMPCA, _U, _V, i, j)));
+        cb(i, j) = std::abs(tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
+                                         Discretization::convection_t(_TEMPCB, _U, _V, i, j)));
+        cc(i, j) = std::abs(tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
+                                         Discretization::convection_t(_TEMPCC, _U, _V, i, j)));
     }
 }
 

@@ -294,6 +294,7 @@ void Case::simulate() {
 
         _field.calculate_temperature(_grid);
         _field.calculate_concentrations(_grid);
+        _field.react(_grid);
 
         _communication.communicate(_field.t_matrix(), domain, iproc, jproc);
         _communication.communicate(_field.ca_matrix(), domain, iproc, jproc);
@@ -454,7 +455,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                 CC->InsertNextTuple(&concentration_c);
 
             } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                       _grid.get_geometry_data().at(i).at(j) == 2) {
+                       _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
 
@@ -481,7 +482,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                     double temperature = _field.t(i, j);
                     Temperature->InsertNextTuple(&temperature);
                 } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                           _grid.get_geometry_data().at(i).at(j) == 2) {
+                           _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
                     double temperature = _field.t(i, j);
                     Temperature->InsertNextTuple(&temperature);
                 } else if (_grid.get_geometry_data().at(i).at(j) == 3) {
@@ -499,6 +500,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                 }
             }
         }
+
     }
 
     // Temp Velocity
@@ -514,7 +516,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                 Velocity->InsertNextTuple(vel);
 
             } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                       _grid.get_geometry_data().at(i).at(j) == 2) {
+                       _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
