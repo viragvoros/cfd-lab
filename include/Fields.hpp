@@ -27,7 +27,7 @@ class Fields {
      */
     Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity,
            double rate_const, double order_a, double order_b,
-           std::vector<Cell *> cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
+           std::vector<Cell *> fluid_cells, int imax, int jmax, double UI, double VI, double PI, double TI, double CAI,
            double CBI, double CCI, std::string _energy_eq, double GX, double GY);
 
     /**
