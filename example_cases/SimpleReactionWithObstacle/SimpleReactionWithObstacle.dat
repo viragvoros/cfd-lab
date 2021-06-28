@@ -1,7 +1,7 @@
 #--------------------------------------------
 #           geometry file            
 #--------------------------------------------
-geo_file     SimpleReaction.pgm
+geo_file     SimpleReactionWithObstacle.pgm
 
 #--------------------------------------------
 #            size of the domain             
@@ -74,8 +74,8 @@ VI           0.0
 # CCI: initial concentration of species C
 # diffusivity: diffusion coefficient
 #--------------------------------------------
-CAIN           1.0
-CBIN           1.0
+CAIN          1.0
+CBIN          1.0
 
 
 CAI           0.0

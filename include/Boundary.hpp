@@ -30,7 +30,8 @@ class Boundary {
  */
 class FixedWallBoundary : public Boundary {
   public:
-    FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature, double kappa, std::map<int, double> wall_heatflux);
+    FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature, double kappa,
+                      std::map<int, double> wall_heatflux);
     FixedWallBoundary(std::vector<Cell *> cells, double wall_temperature); // to be deleted ?
 
     virtual ~FixedWallBoundary() = default;

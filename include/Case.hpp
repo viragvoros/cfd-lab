@@ -58,7 +58,6 @@ class Case {
     /// Wall (id 3) velocity
     double wall_vel_3;
 
-
     /// Number of processes in x direction
     int iproc{1};
     /// Number of processes in y direction
@@ -66,9 +65,6 @@ class Case {
 
     /// Thermal conductivity
     double kappa;
-
-
-
 
     /// Simulation time
     double _t_end;
