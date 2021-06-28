@@ -31,7 +31,7 @@ enum class cell_type {
     INLET_A,      // 4, considered an inflow cell
     INLET_B,      // 5, considered an inflow cell
     OUTFLOW,      // 2
-    WALL_3,       // 3
+    FIXED_WALL,   // 3
     FLUID_BUFFER, // 6
     CONVERSION,   // 7, considered a fluid cell
     MOVING_WALL,  // 8
@@ -48,5 +48,5 @@ const int inlet_b_cell_id = 5;
 const int fluidbuffer_cell_id = 6;
 const int conversion_cell_id = 7;
 const int moving_wall_cell_id = 8;
-const int default_id = 9;
+const int fixed_wall_cell_9_id = 9;
 } // namespace boundary_ids

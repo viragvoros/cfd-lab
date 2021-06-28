@@ -52,20 +52,23 @@ class Case {
     std::string energy_eq{"NONE"};
     /// Wall (id 3) temperature
     double wall_temp_3;
-    /// Wall (id 4) temperature
-    double wall_temp_4;
-    /// Wall (id 5) temperature
-    double wall_temp_5;
+    /// Wall (id 9) temperature
+    double wall_temp_9;
+
     /// Wall (id 3) velocity
     double wall_vel_3;
-    /// Wall (id 4) velocity
-    double wall_vel_4;
-    /// Wall (id 5) velocity
-    double wall_vel_5;
+
+
     /// Number of processes in x direction
     int iproc{1};
     /// Number of processes in y direction
     int jproc{1};
+
+    /// Thermal conductivity
+    double kappa;
+
+
+
 
     /// Simulation time
     double _t_end;

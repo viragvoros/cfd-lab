@@ -3,8 +3,8 @@
 #include <cmath>
 #include <iostream>
 
-FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature)
-    : _cells(cells), _wall_temperature(wall_temperature) {}
+FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, std::map<int, double> wall_temperature, double kappa, std::map<int, double> wall_heatflux)
+    : _cells(cells), _wall_temperature(wall_temperature), _kappa(kappa), _wall_heatflux(wall_heatflux)  {}
 
 // Constructor only used for LidDrivenCavity, where no geometry is available
 FixedWallBoundary::FixedWallBoundary(std::vector<Cell *> cells, double wall_temperature) : _cells(cells) {
@@ -42,7 +42,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j + 1);
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = field.t(i, j + 1);
+                    field.t(i, j) = field.t(i, j + 1) + _wall_heatflux[id]/_kappa ;
                 }
 
             } else if (cell_borders[0] ==
@@ -61,7 +61,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i, j - 1);
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = field.t(i, j - 1);
+                    field.t(i, j) = field.t(i, j - 1) + _wall_heatflux[id]/_kappa ;
                 }
             } else if (cell_borders[0] ==
                        border_position::LEFT) { // Border is in LEFT position (fluid cell is left from ghost cell)
@@ -79,7 +79,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i - 1, j);
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = field.t(i - 1, j);
+                    field.t(i, j) = field.t(i - 1, j)+ _wall_heatflux[id]/_kappa ;
                 }
 
             } else if (cell_borders[0] ==
@@ -97,7 +97,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - field.t(i + 1, j);
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = field.t(i + 1, j);
+                    field.t(i, j) = field.t(i + 1, j)+ _wall_heatflux[id]/_kappa ;
                 }
             }
         }
@@ -123,7 +123,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i + 1, j));
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j + 1));
+                    field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j + 1)) + _wall_heatflux[id]/_kappa  ;
                 }
 
             } else if ((cell_borders[0] == border_position::TOP && cell_borders[1] == border_position::LEFT) ||
@@ -145,7 +145,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j + 1) + field.t(i - 1, j));
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j + 1));
+                    field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j + 1)) + _wall_heatflux[id]/_kappa;
                 }
 
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::RIGHT) ||
@@ -167,7 +167,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i + 1, j));
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j - 1));
+                    field.t(i, j) = 0.5 * (field.t(i + 1, j) + field.t(i, j - 1)) + _wall_heatflux[id]/_kappa;
                 }
 
             } else if ((cell_borders[0] == border_position::BOTTOM && cell_borders[1] == border_position::LEFT) ||
@@ -189,7 +189,7 @@ void FixedWallBoundary::apply(Fields &field) {
                 if (!_wall_temperature.empty() && _wall_temperature[id] != -1) {
                     field.t(i, j) = 2 * _wall_temperature[id] - 0.5 * (field.t(i, j - 1) + field.t(i - 1, j));
                 } else if (!_wall_temperature.empty() && _wall_temperature[id] == -1) {
-                    field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j - 1));
+                    field.t(i, j) = 0.5 * (field.t(i - 1, j) + field.t(i, j - 1)) + _wall_heatflux[id]/_kappa;
                 }
             }
         }

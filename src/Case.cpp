@@ -58,6 +58,9 @@ Case::Case(std::string file_name, int argn, char **args) {
     double rate_const;  /* reaction rate constant */
     double order_a;     /* order of reaction with regard to A */
     double order_b;     /* order of reaction with regard to B */
+    double kappa;       /* Thermal conductivity */
+    double wall_heatflux_3;  /* heat flux specified at boundary */
+    double wall_heatflux_9;  /* heat flux specified at boundary */
 
     if (file.is_open()) {
 
@@ -106,11 +109,11 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "order_a") file >> order_a;
                 if (var == "order_b") file >> order_b;
                 if (var == "wall_temp_3") file >> wall_temp_3;
-                if (var == "wall_temp_4") file >> wall_temp_4;
-                if (var == "wall_temp_5") file >> wall_temp_5;
+                if (var == "wall_temp_9") file >> wall_temp_9;
                 if (var == "wall_vel_3") file >> wall_vel_3;
-                if (var == "wall_vel_4") file >> wall_vel_4;
-                if (var == "wall_vel_5") file >> wall_vel_5;
+                if (var == "kappa") file >> kappa;
+                if (var == "wall_heatflux_3") file >> wall_heatflux_3;
+                if (var == "wall_heatflux_9") file >> wall_heatflux_9;
             }
         }
     }
@@ -132,12 +135,16 @@ Case::Case(std::string file_name, int argn, char **args) {
 
     std::map<int, double> wall_vel;
     std::map<int, double> wall_temp;
+    std::map<int, double> wall_heatflux;
     if (_geom_name.compare("NONE") == 0) {
         wall_vel.insert(std::pair<int, double>(LidDrivenCavity::moving_wall_id, LidDrivenCavity::wall_velocity));
     } else {
         // Construct maps of ids and velocities/temperatures for constructors of boundaries
         wall_vel[boundary_ids::fixed_wall_cell_3_id] = wall_vel_3;
         wall_temp[boundary_ids::fixed_wall_cell_3_id] = wall_temp_3;
+        wall_temp[boundary_ids::fixed_wall_cell_9_id] = wall_temp_9;
+        wall_heatflux[boundary_ids::fixed_wall_cell_3_id] = wall_heatflux_3;
+        wall_heatflux[boundary_ids::fixed_wall_cell_9_id] = wall_heatflux_9;
     }
 
     // Set file names for geometry file and output directory
@@ -165,8 +172,9 @@ Case::Case(std::string file_name, int argn, char **args) {
         _boundaries.push_back(
             std::make_unique<MovingWallBoundary>(_grid.moving_wall_cells(), LidDrivenCavity::wall_velocity));
     }
-    if (not _grid.fixed_wall_cells_3().empty()) {
-        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells_3(), wall_temp));
+    if (not _grid.fixed_wall_cells().empty()) {
+        _boundaries.push_back(std::make_unique<FixedWallBoundary>(_grid.fixed_wall_cells(), wall_temp, kappa, wall_heatflux));
+
     }
     if (not _grid.inflow_cells().empty()) {
         _boundaries.push_back(std::make_unique<InFlowBoundary>(_grid.inflow_cells(), UIN, TIN, CAIN, CBIN));
@@ -488,11 +496,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 } else if (_grid.get_geometry_data().at(i).at(j) == 3) {
                     double temperature = wall_temp_3;
                     Temperature->InsertNextTuple(&temperature);
-                } else if (_grid.get_geometry_data().at(i).at(j) == 4) {
-                    double temperature = wall_temp_4;
-                    Temperature->InsertNextTuple(&temperature);
-                } else if (_grid.get_geometry_data().at(i).at(j) == 5) {
-                    double temperature = wall_temp_5;
+                } else if (_grid.get_geometry_data().at(i).at(j) == 9) {
+                    double temperature = wall_temp_9;
                     Temperature->InsertNextTuple(&temperature);
                 } else {
                     double temperature = 0;
