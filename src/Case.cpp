@@ -510,21 +510,21 @@ void Case::output_vtk(int file_number, int my_rank) {
     // Print Velocity from bottom to top
     for (int j = 0; j < _grid.domain().size_y + 1; j++) {
         for (int i = 0; i < _grid.domain().size_x + 1; i++) {
-            if (_geom_name.compare("NONE") == 0) {
+            if (_geom_name.compare("NONE") == 0) { // Lid driven cavity
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
 
             } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                       _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
+                       _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7 || j == 0) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
 
-            } else {
+            } else { // Obstacles become zero
                 vel[0] = 0;
                 vel[1] = 0;
-                Velocity->InsertNextTuple(vel);
+                structuredGrid->BlankPoint(Velocity->InsertNextTuple(vel));
             }
         }
     }
