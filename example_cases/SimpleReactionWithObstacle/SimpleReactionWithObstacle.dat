@@ -1,7 +1,7 @@
 #--------------------------------------------
 #           geometry file            
 #--------------------------------------------
-geo_file     SimpleReaction.pgm
+geo_file     SimpleReactionWithObstacle.pgm
 
 #--------------------------------------------
 #            size of the domain             
