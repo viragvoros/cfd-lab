@@ -291,13 +291,51 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
     // Fourth line : depth
     ss >> depth;
 
-    int array[numrows][numcols];
+    int original_array[numrows][numcols];
 
     // Following lines : data
     for (int col = numcols - 1; col > -1; --col) {
         for (int row = 0; row < numrows; ++row) {
-            ss >> array[row][col];
+            ss >> original_array[row][col];
         }
+    }
+
+    // Refine the grid
+    int numrows_ref = 2 * (numrows - 2) + 2;
+    int numcols_ref = 2 * (numcols - 2) + 2;
+    int array[numrows_ref][numcols_ref];
+
+    for (int j_small = 1; j_small < numcols - 1; j_small++) {
+        for (int i_small = 1; i_small < numrows - 1; i_small++) {
+            array[2 * i_small][2 * j_small] = original_array[i_small][j_small];
+            array[2 * i_small][2 * j_small - 1] = original_array[i_small][j_small];
+            array[2 * i_small - 1][2 * j_small] = original_array[i_small][j_small];
+            array[2 * i_small - 1][2 * j_small - 1] = original_array[i_small][j_small];
+        }
+    }
+
+    for (int j_small = 1; j_small < numcols - 1; j_small++){
+        array[0][2 * j_small] = original_array[0][j_small];
+        array[0][2 * j_small - 1] = original_array[0][j_small];
+
+        array[numrows_ref - 1][2 * j_small] = original_array[numrows - 1][j_small];
+        array[numrows_ref - 1][2 * j_small - 1] = original_array[numrows - 1][j_small];
+    }
+
+    for (int i_small = 0; i_small < numrows - 1; i_small++){
+        array[2 * i_small][0] = original_array[i_small][0];
+        array[2 * i_small + 1][0] = original_array[i_small][0];
+
+        array[2 * i_small][numcols_ref - 1] = original_array[i_small][numcols - 1];
+        array[2 * i_small + 1][numcols_ref - 1] = original_array[i_small][numcols - 1];
+    }
+
+    std::cout << std::endl;
+    for(int y = 0; y < numcols_ref; y++){
+        for(int x = 0; x < numrows_ref; x++){
+            std::cout << array[x][y];
+        }
+        std::cout << std::endl;
     }
 
     // Copy the local domain information into geometry_data

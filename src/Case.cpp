@@ -123,6 +123,10 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     file.close();
 
+    // Redefine imax and jmax for refinement
+    imax = imax * 2;
+    jmax = jmax * 2;
+
     int error_size;
     MPI_Comm_size(MPI_COMM_WORLD, &error_size);
     int error_rank;
