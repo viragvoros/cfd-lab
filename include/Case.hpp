@@ -71,6 +71,8 @@ class Case {
     /// Solution file outputting frequency
     double _output_freq;
 
+    int ref_factor{1};
+
     Communication _communication;
     Fields _field;
     Grid _grid;

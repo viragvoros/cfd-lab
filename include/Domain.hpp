@@ -32,4 +32,6 @@ struct Domain {
     int domain_size_x{-1};
     /// Number of cells in y direction, not-decomposed
     int domain_size_y{-1};
+
+    int ref_factor{1};
 };
