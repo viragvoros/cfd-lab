@@ -26,7 +26,7 @@ class Fields {
      *
      */
     Fields(double _nu, double _dt, double _tau, double _alpha, double _beta, double _diffusivity, double rate_const,
-           double order_a, double order_b, double _exp_factor, double _act_energy, std::vector<Cell *> fluid_cells,
+           double order_a, double order_b, double _exp_factor, double _act_energy, double react_temp_increase, std::vector<Cell *> fluid_cells,
            int imax, int jmax, double UI, double VI, double PI, double TI, double CAI, double CBI, double CCI,
            std::string _energy_eq, double GX, double GY);
 
@@ -238,6 +238,8 @@ class Fields {
     double _exp_factor;
     /// activation energy
     double _act_energy;
+    /// temperature increase from reaction heat
+    double _react_temp_increase;
 
     /// fluid cells
     std::vector<Cell *> _fluid_cells;

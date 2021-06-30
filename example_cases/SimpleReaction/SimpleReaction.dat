@@ -66,6 +66,28 @@ UI           1.0
 VI           0.0
 
 #--------------------------------------------
+#          energy
+# TI:     initial temperature
+# beta:   thermal expansion coefficient
+# alpha:  thermal diffusivity (nu/Pr)
+#--------------------------------------------
+energy_eq    on
+TI           1.0
+TIN          1.0
+beta         0.00063
+alpha        0.00001429
+
+#--------------------------------------------
+#          wall clusterss
+# num_of_walls:     number of walls
+# wall_temp<num>    wall temperature
+# - enter -1 for adiabatic wall
+#--------------------------------------------
+num_walls    3
+wall_temp_3  1.0
+wall_heatflux_3  0
+
+#--------------------------------------------
 #       Material Transport
 # CAIN: inlet concentration of species A
 # CBIN: inlet concentration of species B
@@ -87,7 +109,9 @@ rate_const    0.002
 order_a	      1
 order_b	      1
 exp_factor    1
-act_energy    60
+act_energy    50
+
+react_temp_increase     0.05
 
 
 #--------------------------------------------

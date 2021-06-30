@@ -5,11 +5,11 @@
 #include <iostream>
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity, double rate_const,
-               double order_a, double order_b, double exp_factor, double act_energy, std::vector<Cell *> fluid_cells,
+               double order_a, double order_b, double exp_factor, double act_energy, double react_temp_increase, std::vector<Cell *> fluid_cells,
                int imax, int jmax, double UI, double VI, double PI, double TI, double CAI, double CBI, double CCI,
                std::string energy_eq, double GX, double GY)
     : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _rate_const(rate_const),
-      _order_a(order_a), _order_b(order_b), _exp_factor(exp_factor), _act_energy(act_energy), _fluid_cells(fluid_cells),
+      _order_a(order_a), _order_b(order_b), _exp_factor(exp_factor), _act_energy(act_energy), _react_temp_increase(react_temp_increase), _fluid_cells(fluid_cells),
       _gx(GX), _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
@@ -153,11 +153,21 @@ void Fields::react(Grid &grid) {
             double tempca = ca(i, j);
             double tempcb = cb(i, j);
 
-            double rate_const_t = _exp_factor * std::exp(-1 * _act_energy / (8.314 * t(i, j)));
+            double exponent = - (_act_energy / (8.314 * t(i, j)));
+            double rate_const_t = _exp_factor * std::exp(exponent);
 
             cc(i, j) += rate_const_t * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             ca(i, j) -= rate_const_t * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             cb(i, j) -= rate_const_t * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
+
+            if (ca(i,j) < 0) {
+                ca(i,j) = 0;
+            }
+            if (cb(i,j) < 0) {
+                cb(i,j) = 0;
+            }
+
+            //t(i,j) += _react_temp_increase;
         }
     } else {
         for (const auto cell : _conversion_cells) {
@@ -168,6 +178,13 @@ void Fields::react(Grid &grid) {
             cc(i, j) += _rate_const * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             ca(i, j) -= _rate_const * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             cb(i, j) -= _rate_const * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
+
+            if (ca(i,j) < 0) {
+                ca(i,j) = 0;
+            }
+            if (cb(i,j) < 0) {
+                cb(i,j) = 0;
+            }
         }
     }
 }

@@ -26,43 +26,44 @@ Case::Case(std::string file_name, int argn, char **args) {
     // Read input parameters
     const int MAX_LINE_LENGTH = 1024;
     std::ifstream file(file_name);
-    double nu;              /* viscosity   */
-    double UI;              /* velocity x-direction */
-    double VI;              /* velocity y-direction */
-    double PI;              /* pressure */
-    double CAI{0};          /* initial concentration of component A */
-    double CBI{0};          /* initial concentration of component B */
-    double CCI{0};          /* initial concentration of component C */
-    double CAIN{0};         /* inlet concentration of component A */
-    double CBIN{0};         /* inlet concentration of component B */
-    double GX;              /* gravitation x-direction */
-    double GY;              /* gravitation y-direction */
-    double xlength;         /* length of the domain x-dir.*/
-    double ylength;         /* length of the domain y-dir.*/
-    double dt;              /* time step */
-    int imax;               /* number of cells x-direction*/
-    int jmax;               /* number of cells y-direction*/
-    double gamma;           /* uppwind differencing factor*/
-    double omg;             /* relaxation factor */
-    double tau;             /* safety factor for time step*/
-    int itermax;            /* max. number of iterations for pressure per time step */
-    double eps;             /* accuracy bound for pressure*/
-    double UIN;             /* inlet velocity x-direction */
-    double VIN;             /* inlet velocity y-direction */
-    int num_of_walls;       /* number of walls */
-    double TI;              /* initial temperature */
-    double TIN;             /* inlet temperature */
-    double beta;            /* thermal expansion coefficient */
-    double alpha;           /* thermal diffusivity */
-    double diffusivity;     /* diffusivity */
-    double rate_const;      /* reaction rate constant */
-    double order_a;         /* order of reaction with regard to A */
-    double order_b;         /* order of reaction with regard to B */
-    double kappa;           /* Thermal conductivity */
-    double wall_heatflux_3; /* heat flux specified at boundary */
-    double wall_heatflux_9; /* heat flux specified at boundary */
-    double exp_factor;      /* pre-exponential factor */
-    double act_energy;      /* activation energy */
+    double nu;                  /* viscosity   */
+    double UI;                  /* velocity x-direction */
+    double VI;                  /* velocity y-direction */
+    double PI;                  /* pressure */
+    double CAI{0};              /* initial concentration of component A */
+    double CBI{0};              /* initial concentration of component B */
+    double CCI{0};              /* initial concentration of component C */
+    double CAIN{0};             /* inlet concentration of component A */
+    double CBIN{0};             /* inlet concentration of component B */
+    double GX;                  /* gravitation x-direction */
+    double GY;                  /* gravitation y-direction */
+    double xlength;             /* length of the domain x-dir.*/
+    double ylength;             /* length of the domain y-dir.*/
+    double dt;                  /* time step */
+    int imax;                   /* number of cells x-direction*/
+    int jmax;                   /* number of cells y-direction*/
+    double gamma;               /* uppwind differencing factor*/
+    double omg;                 /* relaxation factor */
+    double tau;                 /* safety factor for time step*/
+    int itermax;                /* max. number of iterations for pressure per time step */
+    double eps;                 /* accuracy bound for pressure*/
+    double UIN;                 /* inlet velocity x-direction */
+    double VIN;                 /* inlet velocity y-direction */
+    int num_of_walls;           /* number of walls */
+    double TI;                  /* initial temperature */
+    double TIN;                 /* inlet temperature */
+    double beta;                /* thermal expansion coefficient */
+    double alpha;               /* thermal diffusivity */
+    double diffusivity;         /* diffusivity */
+    double rate_const;          /* reaction rate constant */
+    double order_a;             /* order of reaction with regard to A */
+    double order_b;             /* order of reaction with regard to B */
+    double kappa;               /* Thermal conductivity */
+    double wall_heatflux_3;     /* heat flux specified at boundary */
+    double wall_heatflux_9;     /* heat flux specified at boundary */
+    double exp_factor;          /* pre-exponential factor */
+    double act_energy;          /* activation energy */
+    double react_temp_increase; /* increase in temperature from reaction heat */
 
     if (file.is_open()) {
 
@@ -118,6 +119,7 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "wall_heatflux_9") file >> wall_heatflux_9;
                 if (var == "exp_factor") file >> exp_factor;
                 if (var == "act_energy") file >> act_energy;
+                if (var == "react_temp_increase") file >> react_temp_increase;
             }
         }
     }
@@ -163,7 +165,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, exp_factor, act_energy,
+    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, exp_factor, act_energy, react_temp_increase,
                     _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI, CAI, CBI, CBI,
                     energy_eq, GX, GY);
 
