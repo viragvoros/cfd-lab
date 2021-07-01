@@ -61,7 +61,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     double kappa;               /* Thermal conductivity */
     double wall_heatflux_3;     /* heat flux specified at boundary */
     double wall_heatflux_9;     /* heat flux specified at boundary */
-    double exp_factor;          /* pre-exponential factor */
+    double pre_exp_factor;      /* pre-exponential factor */
     double act_energy;          /* activation energy */
     double react_temp_increase; /* increase in temperature from reaction heat */
 
@@ -117,9 +117,10 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "kappa") file >> kappa;
                 if (var == "wall_heatflux_3") file >> wall_heatflux_3;
                 if (var == "wall_heatflux_9") file >> wall_heatflux_9;
-                if (var == "exp_factor") file >> exp_factor;
+                if (var == "pre_exp_factor") file >> pre_exp_factor;
                 if (var == "act_energy") file >> act_energy;
                 if (var == "react_temp_increase") file >> react_temp_increase;
+                if (var == "ref_factor") file >> ref_factor;
             }
         }
     }
@@ -170,9 +171,9 @@ Case::Case(std::string file_name, int argn, char **args) {
     build_domain(domain, imax, jmax);
 
     _grid = Grid(_geom_name, domain);
-    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, exp_factor, act_energy, react_temp_increase,
-                    _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI, TI, CAI, CBI, CBI,
-                    energy_eq, GX, GY);
+    _field = Fields(nu, dt, tau, alpha, beta, diffusivity, rate_const, order_a, order_b, pre_exp_factor, act_energy,
+                    react_temp_increase, _grid.fluid_cells(), _grid.domain().size_x, _grid.domain().size_y, UI, VI, PI,
+                    TI, CAI, CBI, CBI, energy_eq, GX, GY);
 
     _discretization = Discretization(domain.dx, domain.dy, gamma);
     _pressure_solver = std::make_unique<SOR>(omg);
@@ -474,7 +475,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 CB->InsertNextTuple(&concentration_b);
                 CC->InsertNextTuple(&concentration_c);
 
-            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
+            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 ||
+                       _grid.get_geometry_data().at(i).at(j) == 7) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
 
@@ -500,7 +502,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 if (_geom_name.compare("NONE") == 0) {
                     double temperature = _field.t(i, j);
                     Temperature->InsertNextTuple(&temperature);
-                } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
+                } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 ||
+                           _grid.get_geometry_data().at(i).at(j) == 7) {
                     double temperature = _field.t(i, j);
                     Temperature->InsertNextTuple(&temperature);
                 } else if (_grid.get_geometry_data().at(i).at(j) == 3) {
@@ -529,8 +532,8 @@ void Case::output_vtk(int file_number, int my_rank) {
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
 
-            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7 ||
-                       j == 0) {
+            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 ||
+                       _grid.get_geometry_data().at(i).at(j) == 7 || j == 0) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
@@ -538,7 +541,7 @@ void Case::output_vtk(int file_number, int my_rank) {
             } else { // Obstacles become zero
                 vel[0] = 0;
                 vel[1] = 0;
-                //Velocity->InsertNextTuple(vel);
+                // Velocity->InsertNextTuple(vel);
                 structuredGrid->BlankPoint(Velocity->InsertNextTuple(vel));
             }
         }

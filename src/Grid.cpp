@@ -307,35 +307,31 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
 
     for (int j_small = 1; j_small < numcols - 1; j_small++) { // inner cells
         for (int i_small = 1; i_small < numrows - 1; i_small++) {
-            for (int i = (_domain.ref_factor * i_small - _domain.ref_factor + 1); i <= (_domain.ref_factor * i_small); i++){
-                for (int j = (_domain.ref_factor * j_small - _domain.ref_factor + 1); j <= (_domain.ref_factor * j_small); j++){
+            for (int i = (_domain.ref_factor * i_small - _domain.ref_factor + 1); i <= (_domain.ref_factor * i_small);
+                 i++) {
+                for (int j = (_domain.ref_factor * j_small - _domain.ref_factor + 1);
+                     j <= (_domain.ref_factor * j_small); j++) {
                     array[i][j] = original_array[i_small][j_small];
                 }
             }
         }
     }
 
-    for (int j_small = 1; j_small < numcols - 1; j_small++){
-        for (int j = (_domain.ref_factor * j_small - _domain.ref_factor + 1); j <= (_domain.ref_factor * j_small); j++) { // upper and lower row
+    for (int j_small = 1; j_small < numcols - 1; j_small++) {
+        for (int j = (_domain.ref_factor * j_small - _domain.ref_factor + 1); j <= (_domain.ref_factor * j_small);
+             j++) { // upper and lower row
             array[0][j] = original_array[0][j_small];
             array[numrows_ref - 1][j] = original_array[numrows - 1][j_small];
         }
     }
 
-    for (int i_small = 0; i_small < numrows - 1; i_small++){
-        for (int i = (_domain.ref_factor * i_small - _domain.ref_factor ); i <= (_domain.ref_factor * i_small+1); i++) {
+    for (int i_small = 0; i_small < numrows - 1; i_small++) {
+        for (int i = (_domain.ref_factor * i_small - _domain.ref_factor); i <= (_domain.ref_factor * i_small + 1);
+             i++) {
             array[i][0] = original_array[i_small][0];
             array[i][numcols_ref - 1] = original_array[i_small][numcols - 1];
         }
     }
-
-//    std::cout << std::endl;
-//    for(int y = 0; y < numcols_ref; y++){
-//        for(int x = 0; x < numrows_ref; x++){
-//            std::cout << array[x][y];
-//        }
-//        std::cout << std::endl;
-//    }
 
     // Copy the local domain information into geometry_data
     for (int col = _domain.jmin; col < _domain.jmax; ++col) {

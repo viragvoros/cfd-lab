@@ -86,12 +86,18 @@ diffusivity   0.001
 rate_const    0.002
 order_a	      1
 order_b	      1
-exp_factor    1
-act_energy    60
-
+pre_exp_factor  0.032
+act_energy    4.12
 
 #--------------------------------------------
 #       inlet velocity
 #--------------------------------------------
 UIN          1.0
 VIN          0.0
+
+#--------------------------------------------
+#       refinement and parallelization
+#--------------------------------------------
+ref_factor   2
+iproc        1
+jproc        1

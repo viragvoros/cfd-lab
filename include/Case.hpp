@@ -59,9 +59,9 @@ class Case {
     double wall_vel_3;
 
     /// Number of processes in x direction
-    int iproc{2};
+    int iproc{1};
     /// Number of processes in y direction
-    int jproc{2};
+    int jproc{1};
 
     /// Thermal conductivity
     double kappa;
@@ -70,8 +70,8 @@ class Case {
     double _t_end;
     /// Solution file outputting frequency
     double _output_freq;
-
-    int ref_factor{2};
+    /// Refinement factor
+    int ref_factor{1};
 
     Communication _communication;
     Fields _field;

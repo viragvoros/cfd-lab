@@ -1,17 +1,17 @@
 #include "Fields.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iostream>
-#include <cassert>
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity, double rate_const,
-               double order_a, double order_b, double exp_factor, double act_energy, double react_temp_increase, std::vector<Cell *> fluid_cells,
-               int imax, int jmax, double UI, double VI, double PI, double TI, double CAI, double CBI, double CCI,
-               std::string energy_eq, double GX, double GY)
+               double order_a, double order_b, double pre_exp_factor, double act_energy, double react_temp_increase,
+               std::vector<Cell *> fluid_cells, int imax, int jmax, double UI, double VI, double PI, double TI,
+               double CAI, double CBI, double CCI, std::string energy_eq, double GX, double GY)
     : _nu(nu), _dt(dt), _tau(tau), _alpha(alpha), _beta(beta), _diffusivity(diffusivity), _rate_const(rate_const),
-      _order_a(order_a), _order_b(order_b), _exp_factor(exp_factor), _act_energy(act_energy), _react_temp_increase(react_temp_increase), _fluid_cells(fluid_cells),
-      _gx(GX), _gy(GY) {
+      _order_a(order_a), _order_b(order_b), _pre_exp_factor(pre_exp_factor), _act_energy(act_energy),
+      _react_temp_increase(react_temp_increase), _fluid_cells(fluid_cells), _gx(GX), _gy(GY) {
     _U = Matrix<double>(imax + 2, jmax + 2);
     _V = Matrix<double>(imax + 2, jmax + 2);
     _P = Matrix<double>(imax + 2, jmax + 2);
@@ -146,6 +146,7 @@ void Fields::calculate_concentrations(Grid &grid) {
     }
 }
 
+// Function to calculate concentrations after reaction
 void Fields::react(Grid &grid) {
     if (_energy_eq.compare("NONE") != 0) {
         for (const auto cell : _conversion_cells) {
@@ -154,29 +155,29 @@ void Fields::react(Grid &grid) {
             double tempca = ca(i, j);
             double tempcb = cb(i, j);
 
-//            assert(t(i,j) == 0);
-            if ((t(i,j) < 0.0001) && (t(i,j) > -0.0001)){
-                if (t(i,j) < 0){
-                    t(i,j) = -0.0001;
+            if ((t(i, j) < 0.0001) && (t(i, j) > -0.0001)) {
+                if (t(i, j) < 0) {
+                    t(i, j) = -0.0001;
                 } else {
                     t(i, j) = 0.0001;
                 }
             }
-            double exponent = - (_act_energy / (8.314 * t(i, j)));
-            double rate_const_t = _exp_factor * std::exp(exponent);
+
+            double exponent = -(_act_energy / (8.314 * t(i, j)));
+            double rate_const_t = _pre_exp_factor * std::exp(exponent);
 
             cc(i, j) += rate_const_t * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             ca(i, j) -= rate_const_t * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             cb(i, j) -= rate_const_t * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
 
-            if (ca(i,j) < 0) {
-                ca(i,j) = 0;
+            if (ca(i, j) < 0) {
+                ca(i, j) = 0;
             }
-            if (cb(i,j) < 0) {
-                cb(i,j) = 0;
+            if (cb(i, j) < 0) {
+                cb(i, j) = 0;
             }
 
-            t(i,j) += _react_temp_increase;
+            t(i, j) += _react_temp_increase;
         }
     } else {
         for (const auto cell : _conversion_cells) {
@@ -188,11 +189,11 @@ void Fields::react(Grid &grid) {
             ca(i, j) -= _rate_const * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
             cb(i, j) -= _rate_const * std::pow(tempca, _order_a) * std::pow(tempcb, _order_b);
 
-            if (ca(i,j) < 0) {
-                ca(i,j) = 0;
+            if (ca(i, j) < 0) {
+                ca(i, j) = 0;
             }
-            if (cb(i,j) < 0) {
-                cb(i,j) = 0;
+            if (cb(i, j) < 0) {
+                cb(i, j) = 0;
             }
         }
     }
