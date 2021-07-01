@@ -51,12 +51,12 @@ endif()
 
 # Creating the executable of our project and the required dependencies
 # the executable is called fluidchen
-add_executable(fluidchen src/main.cpp src/Boundary.cpp src/Case.cpp src/Cell.cpp src/Discretization.cpp src/Fields.cpp src/Grid.cpp src/PressureSolver.cpp src/Communication.cpp)
+add_executable(fluidchem src/main.cpp src/Boundary.cpp src/Case.cpp src/Cell.cpp src/Discretization.cpp src/Fields.cpp src/Grid.cpp src/PressureSolver.cpp src/Communication.cpp)
 
 # if you use external libraries you have to link them like 
-target_link_libraries(fluidchen PRIVATE MPI::MPI_CXX)
-target_link_libraries(fluidchen PRIVATE ${VTK_LIBRARIES})
+target_link_libraries(fluidchem PRIVATE MPI::MPI_CXX)
+target_link_libraries(fluidchem PRIVATE ${VTK_LIBRARIES})
 
-install(TARGETS fluidchen DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS fluidchem DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 # If you write tests, you can include your subdirectory (in this case tests) as done here
 # Testing

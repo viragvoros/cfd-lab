@@ -1,10 +1,14 @@
-![](FluidchenLogo.png)
+![](FLUIDchemLogo.png)
 
-Fluidchen is a CFD Solver developed for the CFD Lab taught at TUM Informatics, Chair of Scientific Computing in Computer Science.
+**FLUIDchem** is a CFD solver that can be used to model chemical reactions.
+There are various features, including but not limited to:
 
-Solutions of Group A for the CFD Lab
-Summer term 2021
-Theresa Hefele, Virag Vörös, Elia Zonta
+* Arbitrary order reaction kinetics
+* Exo- and endothermic reactions
+* Temperature dependent reaction-rate-constant calculation
+* ...
+
+It was developed at TUM by Theresa Hefele, Virag Vörös and Elia Zonta in the CFD Lab course of SoSe 2021.
 
 ## Software Requirements
 
@@ -24,15 +28,15 @@ make
 make install # optional, check prefix
 ```
 
-These commands will create the executable `fluidchen` and copy it to the default directory `/usr/local/bin` . If you want to install to a custom path, execute the cmake command as
+These commands will create the executable `fluidchem` and copy it to the default directory `/usr/local/bin` . If you want to install to a custom path, execute the cmake command as
 
 ```shell
 cmake -DCMAKE_INSTALL_PREFIX=/path/to/directory ..
 ```
 
-After `make && make install` **fluidchen** will be installed to `/path/to/directory/bin` . Note that you may need to update your `PATH` environment variable.
+After `make && make install` **FLUIDchem** will be installed to `/path/to/directory/bin` . Note that you may need to update your `PATH` environment variable.
 
-By default, **fluidchen** is installed in `DEBUG` mode. To obtain full performance, you can execute cmake as
+By default, **FLUIDchem** is installed in `DEBUG` mode. To obtain full performance, you can execute cmake as
 
 ```shell
 cmake -DCMAKE_BUILD_TYPE=RELEASE ..
@@ -46,16 +50,61 @@ cmake -DCMAKE_CXX_FLAGS="-O3" ..
 
 ## Running
 
-In order to run **Fluidchen**, the case file should be given as input parameter. Some default case files are located in the `example_cases` directory. If you installed **Fluidchen**, you can execute them from anywhere you want as
+In order to run **FLUIDchem**, the case file should be given as input parameter. Some default case files are located in the `example_cases` directory. If you installed **FLUIDchem**, you can execute them from anywhere you want as
+
 For Serial:
 
 ```shell
-fluidchen /path/to/fluidchen/example_cases/LidDrivenCavity/LidDrivenCavity.dat
+fluidchem /path/to/fluidchem/example_cases/LidDrivenCavity/LidDrivenCavity.dat
 ```
 
-This will run the case file and create the output folder `/path/to/case/case_name_Output` which holds the `.vtk` files of the solution. The output folder is created in the same location as your case file. Note that this may require write permissions in the given directory.
+To calculate the simulation in parallel, run:
 
-If input file does not contain a geometry file, fluidchen will run lid-driven cavity case with given parameters.
+```shell
+mpirun -np <iproc*jproc> ./fluidchem /path/to/fluidchem/example_cases/LidDrivenCavity/LidDrivenCavity.dat
+```
+
+If you want to run on more cores than available on your machine, simply run:
+```shell
+mpirun --oversubscribe -np <iproc*jproc> ./fluidchem /path/to/fluidchem/example_cases/FluidTrap/FluidTrap.dat
+```
+
+, where iproc and jproc represent the number of division in x-, and y-directions. Accordingly, iproc*jproc represents the total amount of processes used to calculate this simulation.
+Be aware that these have to match the iproc and jproc parameters in the .dat file. If the user wants to calculate in serial iproc and jproc can either be deleted in the dat file or set to 1.
+
+This will run the case file and create the output folder `/path/to/case/case_name_Output_iprocxjproc` which holds the `.vtk` files of the solution. The output folder is created in the same location as your case file. Note that this may require write permissions in the given directory.
+
+For analysis of the parallel results: Each rank writes it's own .vtk file. Plotting them next to each other resembles the complete simulation in the end. 
+
+If an input file does not contain a geometry file, **FLUIDchem** will run the lid-driven cavity case with given parameters.
+
+### Simulation Report 
+
+Fluidchen is printing important information about the simulation to the terminal at runtime. It will tell the user if the SOR solver is not converging, as well as the pressure residuals and the overall computation time from initialisation to finalisation. 
+WATCH OUT: RESIDUALS AND RELATIVE UPDATES ONLY VALID FOR THE MASTER RANK!
+
+#### General Information
+
+* If the SOR solver doesn't converge it will tell you at which timestep it fails
+* Relative update of the velocities in x and y directions and temperature (U-Rel-Update, V-Rel-Update, T-Rel-Update), calculated with the following formula:
+```cpp
+u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
+v_rel_update = std::abs(1 - previous_mean_v / _field.v_avg());
+t_rel_update = std::abs(1 - previous_mean_t / _field.t_avg());
+```
+* The relative update of the pressure value, calculate in the SOR solver (this one is also used as an exit condition for the SOR-solver)
+
+#### How to interpret the result statistics
+If the user expects a steady solution, then the relative updates are a good metric for judging the convergence of the simulation. The lower they are the better and the user can also terminate the simulation once the relative update values are below a desired threshold by using "Ctrl + C".
+For unsteady solutions the relative update values will probably decrease at the beginning of the solution and later oscillate.
+
+WARNING: 
+* Fluidchen always plots all relative update values. In simulations where there is no temperature calculated, the relative update value for temperature will be nan. 
+* In our simulation examples the volume forces are set to zero. That means we will not see velocity developments based on temperature differences. Accordingly the relative update for velocity and pressure as well as the SOR-Iterations can be zero.
+
+This is how the terminal information could look like:
+
+![](Example_Terminal_Output.png)
 
 ### GCC version
 
@@ -65,7 +114,7 @@ You can get you current version of GCC by running:
 g++ -v
 ```
 
-### Defining your GCC version
+#### Defining your GCC version
 
 If you have GCC 9 or newer, you can set in the `CMakeLists.txt` file:
 
@@ -145,3 +194,10 @@ export CXX=`which g++-7`
 ```
 
 Make sure to use a backtick (\`) to get the `which` command executed. Afterwards, you can run `cmake ..`.
+
+### Setting up a simulation
+
+You will have to provide a .dat file with input parameters and a .pgm file containing information about the geometry to **FLUIDchem**.
+To see how this works, please check out the `first-steps.md` in the `firststeps` directory.
+
+
