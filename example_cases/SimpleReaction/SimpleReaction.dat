@@ -38,7 +38,7 @@ dt_value     0.2
 # omg: relaxation factor for SOR
 # gamma: upwind differencing factor
 #--------------------------------------------
-itermax      2000
+itermax      5000
 eps          0.001
 omg          1.7
 gamma        0.5
@@ -108,8 +108,8 @@ diffusivity   0.001
 rate_const    0.002
 order_a	      1
 order_b	      1
-exp_factor    1
-act_energy    50
+exp_factor    0.032
+act_energy    4.12
 
 react_temp_increase     0.05
 

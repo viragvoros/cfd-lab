@@ -154,7 +154,14 @@ void Fields::react(Grid &grid) {
             double tempca = ca(i, j);
             double tempcb = cb(i, j);
 
-            assert(t(i,j) != 0);
+//            assert(t(i,j) == 0);
+            if ((t(i,j) < 0.0001) && (t(i,j) > -0.0001)){
+                if (t(i,j) < 0){
+                    t(i,j) = -0.0001;
+                } else {
+                    t(i, j) = 0.0001;
+                }
+            }
             double exponent = - (_act_energy / (8.314 * t(i, j)));
             double rate_const_t = _exp_factor * std::exp(exponent);
 
