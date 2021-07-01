@@ -65,7 +65,7 @@ void Grid::assign_cell_types(std::vector<std::vector<int>> &geometry_data) {
         }
 
         for (int i_geom = 0; i_geom <= _domain.size_x + 1; ++i_geom) {
-            if (geometry_data.at(i_geom).at(j_geom) == 0 &&
+            if ((geometry_data.at(i_geom).at(j_geom) == 0 || geometry_data.at(i_geom).at(j_geom) == 7) &&
                 (i == 0 or j == 0 or i == _domain.size_x + 1 or j == _domain.size_y + 1)) {
                 _cells(i, j) = Cell(i, j, cell_type::FLUID_BUFFER);
                 _fluidbuffer_cells.push_back(&_cells(i, j));
