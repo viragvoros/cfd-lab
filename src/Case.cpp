@@ -125,6 +125,10 @@ Case::Case(std::string file_name, int argn, char **args) {
     }
     file.close();
 
+    // Redefine imax and jmax for refinement
+    imax = imax * ref_factor;
+    jmax = jmax * ref_factor;
+
     int error_size;
     MPI_Comm_size(MPI_COMM_WORLD, &error_size);
     int error_rank;
@@ -161,6 +165,7 @@ Case::Case(std::string file_name, int argn, char **args) {
     domain.dy = ylength / (double)jmax;
     domain.domain_size_x = imax; // global domain size x (amount of cells in x direction) without the ghost cell frame
     domain.domain_size_y = jmax; // global domain size y (amount of cells in y direction) without the ghost cell frame
+    domain.ref_factor = ref_factor;
 
     build_domain(domain, imax, jmax);
 
@@ -365,7 +370,7 @@ void Case::simulate() {
         output_counter++;
         t = t + dt;
 
-        if (output_counter == 20 || output_counter % 100 == 0) {
+        if (output_counter == 1 || output_counter % 100 == 0) {
             if (my_rank == 0) {
 
                 u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
@@ -469,8 +474,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                 CB->InsertNextTuple(&concentration_b);
                 CC->InsertNextTuple(&concentration_c);
 
-            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                       _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
+            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
                 double pressure = _field.p(i, j);
                 Pressure->InsertNextTuple(&pressure);
 
@@ -496,8 +500,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                 if (_geom_name.compare("NONE") == 0) {
                     double temperature = _field.t(i, j);
                     Temperature->InsertNextTuple(&temperature);
-                } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                           _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
+                } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7) {
                     double temperature = _field.t(i, j);
                     Temperature->InsertNextTuple(&temperature);
                 } else if (_grid.get_geometry_data().at(i).at(j) == 3) {
@@ -526,8 +529,7 @@ void Case::output_vtk(int file_number, int my_rank) {
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
                 Velocity->InsertNextTuple(vel);
 
-            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 1 ||
-                       _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7 ||
+            } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 || _grid.get_geometry_data().at(i).at(j) == 7 ||
                        j == 0) {
                 vel[0] = (_field.u(i, j) + _field.u(i, j + 1)) * 0.5;
                 vel[1] = (_field.v(i, j) + _field.v(i + 1, j)) * 0.5;
@@ -536,6 +538,7 @@ void Case::output_vtk(int file_number, int my_rank) {
             } else { // Obstacles become zero
                 vel[0] = 0;
                 vel[1] = 0;
+                //Velocity->InsertNextTuple(vel);
                 structuredGrid->BlankPoint(Velocity->InsertNextTuple(vel));
             }
         }
