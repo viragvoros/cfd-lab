@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <cassert>
 
 Fields::Fields(double nu, double dt, double tau, double alpha, double beta, double diffusivity, double rate_const,
                double order_a, double order_b, double exp_factor, double act_energy, double react_temp_increase, std::vector<Cell *> fluid_cells,
@@ -153,6 +154,7 @@ void Fields::react(Grid &grid) {
             double tempca = ca(i, j);
             double tempcb = cb(i, j);
 
+            assert(t(i,j) != 0);
             double exponent = - (_act_energy / (8.314 * t(i, j)));
             double rate_const_t = _exp_factor * std::exp(exponent);
 
@@ -167,7 +169,7 @@ void Fields::react(Grid &grid) {
                 cb(i,j) = 0;
             }
 
-            //t(i,j) += _react_temp_increase;
+            t(i,j) += _react_temp_increase;
         }
     } else {
         for (const auto cell : _conversion_cells) {

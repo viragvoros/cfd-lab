@@ -304,6 +304,8 @@ InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, double inflow_velocity
     _inflow_velocity.insert(std::pair(boundary_ids::inlet_b_cell_id, inflow_velocity));
 
     _inflow_temperature.insert(std::pair(boundary_ids::inflow_cell_id, inflow_temperature));
+    _inflow_temperature.insert(std::pair(boundary_ids::inlet_a_cell_id, inflow_temperature));
+    _inflow_temperature.insert(std::pair(boundary_ids::inlet_b_cell_id, inflow_temperature));
 }
 
 InFlowBoundary::InFlowBoundary(std::vector<Cell *> cells, std::map<int, double> inflow_velocity,
