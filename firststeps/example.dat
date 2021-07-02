@@ -130,7 +130,7 @@ VIN          0.0
 #       Refinement 
 # ref_factor: factor by which mesh is refined
 #--------------------------------------------
-ref_factor   2
+ref_factor   1
 
 #--------------------------------------------
 #       Parallelization 

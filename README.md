@@ -1,11 +1,13 @@
 ![](FLUIDchemLogo.png)
 
-**FLUIDchem** is a CFD solver that can be used to model chemical reactions.
+**FLUIDchem** is a CFD solver that can be used to model single-phase chemical reactions of type A + B -> C.
 There are various features, including but not limited to:
 
 * Arbitrary order reaction kinetics
 * Exo- and endothermic reactions
 * Temperature dependent reaction-rate-constant calculation
+* Supporting parallel execution
+* User defined mesh refinement 
 * ...
 
 It was developed at TUM by Theresa Hefele, Virag Vörös and Elia Zonta in the CFD Lab course of SoSe 2021.
@@ -13,7 +15,8 @@ It was developed at TUM by Theresa Hefele, Virag Vörös and Elia Zonta in the C
 ## Software Requirements
 
 * VTK 7 or higher
-* GCC 9 (optional)
+* GCC 9 (optional) / Clang
+* MPI
   
 Detailed information is given below.
 
@@ -55,7 +58,7 @@ In order to run **FLUIDchem**, the case file should be given as input parameter.
 For Serial:
 
 ```shell
-fluidchem /path/to/fluidchem/example_cases/LidDrivenCavity/LidDrivenCavity.dat
+mpirun -np 1 ./fluidchem /path/to/fluidchem/example_cases/LidDrivenCavity/LidDrivenCavity.dat
 ```
 
 To calculate the simulation in parallel, run:
