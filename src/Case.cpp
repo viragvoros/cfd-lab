@@ -371,7 +371,7 @@ void Case::simulate() {
         output_counter++;
         t = t + dt;
 
-        if (output_counter == 20 || output_counter % 100 == 0) {
+        if (output_counter % 10 == 0) {
             if (my_rank == 0) {
 
                 u_rel_update = std::abs(1 - previous_mean_u / _field.u_avg());
