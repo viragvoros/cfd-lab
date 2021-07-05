@@ -58,9 +58,9 @@ Case::Case(std::string file_name, int argn, char **args) {
     double rate_const;          /* reaction rate constant */
     double order_a;             /* order of reaction with regard to A */
     double order_b;             /* order of reaction with regard to B */
-    double kappa;               /* Thermal conductivity */
-    double wall_heatflux_3;     /* heat flux specified at boundary */
-    double wall_heatflux_9;     /* heat flux specified at boundary */
+    double kappa{1};            /* Thermal conductivity */
+    double wall_heatflux_3{0};  /* heat flux specified at boundary */
+    double wall_heatflux_9{0};  /* heat flux specified at boundary */
     double pre_exp_factor;      /* pre-exponential factor */
     double act_energy;          /* activation energy */
     double react_temp_increase; /* increase in temperature from reaction heat */
@@ -505,12 +505,6 @@ void Case::output_vtk(int file_number, int my_rank) {
                 } else if (_grid.get_geometry_data().at(i).at(j) == 0 || _grid.get_geometry_data().at(i).at(j) == 2 ||
                            _grid.get_geometry_data().at(i).at(j) == 7) {
                     double temperature = _field.t(i, j);
-                    Temperature->InsertNextTuple(&temperature);
-                } else if (_grid.get_geometry_data().at(i).at(j) == 3) {
-                    double temperature = wall_temp_3;
-                    Temperature->InsertNextTuple(&temperature);
-                } else if (_grid.get_geometry_data().at(i).at(j) == 9) {
-                    double temperature = wall_temp_9;
                     Temperature->InsertNextTuple(&temperature);
                 } else {
                     double temperature = 0;
