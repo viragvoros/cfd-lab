@@ -120,15 +120,10 @@ Case::Case(std::string file_name, int argn, char **args) {
                 if (var == "pre_exp_factor") file >> pre_exp_factor;
                 if (var == "act_energy") file >> act_energy;
                 if (var == "react_temp_increase") file >> react_temp_increase;
-                if (var == "ref_factor") file >> ref_factor;
             }
         }
     }
     file.close();
-
-    // Redefine imax and jmax for refinement
-    imax = imax * ref_factor;
-    jmax = jmax * ref_factor;
 
     int error_size;
     MPI_Comm_size(MPI_COMM_WORLD, &error_size);
@@ -166,7 +161,6 @@ Case::Case(std::string file_name, int argn, char **args) {
     domain.dy = ylength / (double)jmax;
     domain.domain_size_x = imax; // global domain size x (amount of cells in x direction) without the ghost cell frame
     domain.domain_size_y = jmax; // global domain size y (amount of cells in y direction) without the ghost cell frame
-    domain.ref_factor = ref_factor;
 
     build_domain(domain, imax, jmax);
 

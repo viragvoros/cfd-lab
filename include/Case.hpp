@@ -70,8 +70,6 @@ class Case {
     double _t_end;
     /// Solution file outputting frequency
     double _output_freq;
-    /// Refinement factor
-    int ref_factor{1};
 
     Communication _communication;
     Fields _field;

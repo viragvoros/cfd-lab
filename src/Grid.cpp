@@ -291,45 +291,12 @@ void Grid::parse_geometry_file(std::string filedoc, std::vector<std::vector<int>
     // Fourth line : depth
     ss >> depth;
 
-    int original_array[numrows][numcols];
+    int array[numrows][numcols];
 
     // Following lines : data
     for (int col = numcols - 1; col > -1; --col) {
         for (int row = 0; row < numrows; ++row) {
-            ss >> original_array[row][col];
-        }
-    }
-
-    // Refine the grid
-    int numrows_ref = _domain.ref_factor * (numrows - 2) + 2;
-    int numcols_ref = _domain.ref_factor * (numcols - 2) + 2;
-    int array[numrows_ref][numcols_ref];
-
-    for (int j_small = 1; j_small < numcols - 1; j_small++) { // inner cells
-        for (int i_small = 1; i_small < numrows - 1; i_small++) {
-            for (int i = (_domain.ref_factor * i_small - _domain.ref_factor + 1); i <= (_domain.ref_factor * i_small);
-                 i++) {
-                for (int j = (_domain.ref_factor * j_small - _domain.ref_factor + 1);
-                     j <= (_domain.ref_factor * j_small); j++) {
-                    array[i][j] = original_array[i_small][j_small];
-                }
-            }
-        }
-    }
-
-    for (int j_small = 1; j_small < numcols - 1; j_small++) {
-        for (int j = (_domain.ref_factor * j_small - _domain.ref_factor + 1); j <= (_domain.ref_factor * j_small);
-             j++) { // upper and lower row
-            array[0][j] = original_array[0][j_small];
-            array[numrows_ref - 1][j] = original_array[numrows - 1][j_small];
-        }
-    }
-
-    for (int i_small = 0; i_small < numrows - 1; i_small++) {
-        for (int i = (_domain.ref_factor * i_small - _domain.ref_factor); i <= (_domain.ref_factor * i_small + 1);
-             i++) {
-            array[i][0] = original_array[i_small][0];
-            array[i][numcols_ref - 1] = original_array[i_small][numcols - 1];
+            ss >> array[row][col];
         }
     }
 
