@@ -72,8 +72,8 @@ VI           0.0
 # alpha:  thermal diffusivity (nu/Pr)
 #--------------------------------------------
 energy_eq    on
-TI           10.0
-TIN          10.0
+TI           283.15
+TIN          283.15
 beta         0.00063
 alpha        0.00001429
 
@@ -84,7 +84,7 @@ alpha        0.00001429
 # - enter -1 for adiabatic wall
 #--------------------------------------------
 num_walls    3
-wall_temp_3  10.0
+wall_temp_3  283.15
 wall_heatflux_3  0
 
 #--------------------------------------------
@@ -109,7 +109,7 @@ rate_const    0.002
 order_a	      1
 order_b	      1
 pre_exp_factor    0.032
-act_energy    4.12
+act_energy    6150
 
 react_temp_increase     0.05
 

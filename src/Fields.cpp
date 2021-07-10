@@ -122,6 +122,11 @@ void Fields::calculate_temperature(Grid &grid) {
 
             t(i, j) = temp(i, j) + _dt * (_alpha * Discretization::diffusion(_TEMP, i, j) -
                                           Discretization::convection_t(_TEMP, _U, _V, i, j));
+
+            if (t(i, j) < 0) {
+                t(i, j) = 0;
+            }
+
             _t_avg += std::abs(t(i, j)); // Collect field values for later relative update calculation
         }
         _t_avg = std::sqrt(_t_avg) /
@@ -137,12 +142,23 @@ void Fields::calculate_concentrations(Grid &grid) {
         int i = cell->i();
         int j = cell->j();
 
-        ca(i, j) = std::abs(tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
-                                                  Discretization::convection_t(_TEMPCA, _U, _V, i, j)));
-        cb(i, j) = std::abs(tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
-                                                  Discretization::convection_t(_TEMPCB, _U, _V, i, j)));
-        cc(i, j) = std::abs(tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
-                                                  Discretization::convection_t(_TEMPCC, _U, _V, i, j)));
+        ca(i, j) = tempca(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCA, i, j) -
+                                                  Discretization::convection_t(_TEMPCA, _U, _V, i, j));
+        cb(i, j) = tempcb(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCB, i, j) -
+                                                  Discretization::convection_t(_TEMPCB, _U, _V, i, j));
+        cc(i, j) = tempcc(i, j) + _dt * (_diffusivity * Discretization::diffusion(_TEMPCC, i, j) -
+                                                  Discretization::convection_t(_TEMPCC, _U, _V, i, j));
+
+        if (ca(i, j) < 0) {
+            ca(i, j) = 0;
+        }
+        if (cb(i, j) < 0) {
+            cb(i, j) = 0;
+        }
+        if (cc(i, j) < 0) {
+            cc(i, j) = 0;
+        }
+
     }
 }
 
@@ -154,14 +170,6 @@ void Fields::react(Grid &grid) {
             int j = cell->j();
             double tempca = ca(i, j);
             double tempcb = cb(i, j);
-
-            if ((t(i, j) < 0.0001) && (t(i, j) > -0.0001)) {
-                if (t(i, j) < 0) {
-                    t(i, j) = -0.0001;
-                } else {
-                    t(i, j) = 0.0001;
-                }
-            }
 
             double exponent = -(_act_energy / (8.314 * t(i, j)));
             double rate_const_t = _pre_exp_factor * std::exp(exponent);
@@ -175,6 +183,9 @@ void Fields::react(Grid &grid) {
             }
             if (cb(i, j) < 0) {
                 cb(i, j) = 0;
+            }
+            if (cc(i, j) < 0) {
+                cc(i, j) = 0;
             }
 
             t(i, j) += _react_temp_increase;
@@ -194,6 +205,9 @@ void Fields::react(Grid &grid) {
             }
             if (cb(i, j) < 0) {
                 cb(i, j) = 0;
+            }
+            if (cc(i, j) < 0) {
+                cc(i, j) = 0;
             }
         }
     }
