@@ -87,7 +87,7 @@ rate_const    0.002
 order_a	      1
 order_b	      1
 pre_exp_factor  0.032
-act_energy    4.12
+act_energy    6150
 
 #--------------------------------------------
 #       inlet velocity
@@ -98,6 +98,6 @@ VIN          0.0
 #--------------------------------------------
 #       refinement and parallelization
 #--------------------------------------------
-ref_factor   2
+ref_factor   1
 iproc        1
 jproc        1
