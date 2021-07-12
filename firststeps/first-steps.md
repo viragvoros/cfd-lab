@@ -33,7 +33,3 @@ Legend:
 9  Wall/Obstacle (new/other physical values compared to 3)
 
 If you want to explore Fluidchem checkout our example cases.
-
-
-
-

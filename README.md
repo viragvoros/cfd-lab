@@ -83,7 +83,7 @@ If an input file does not contain a geometry file, **FLUIDchem** will run the li
 
 ### Simulation Report 
 
-Fluidchen is printing important information about the simulation to the terminal at runtime. It will tell the user if the SOR solver is not converging, as well as the pressure residuals and the overall computation time from initialisation to finalisation. 
+Fluidchem is printing important information about the simulation to the terminal at runtime. It will tell the user if the SOR solver is not converging, as well as the pressure residuals and the overall computation time from initialisation to finalisation. 
 WATCH OUT: RESIDUALS AND RELATIVE UPDATES ONLY VALID FOR THE MASTER RANK!
 
 #### General Information
@@ -102,7 +102,7 @@ If the user expects a steady solution, then the relative updates are a good metr
 For unsteady solutions the relative update values will probably decrease at the beginning of the solution and later oscillate.
 
 WARNING: 
-* Fluidchen always plots all relative update values. In simulations where there is no temperature calculated, the relative update value for temperature will be nan. 
+* Fluidchem always plots all relative update values. In simulations where there is no temperature calculated, the relative update value for temperature will be nan. 
 * In our simulation examples the volume forces are set to zero. That means we will not see velocity developments based on temperature differences. Accordingly the relative update for velocity and pressure as well as the SOR-Iterations can be zero.
 
 This is how the terminal information could look like:
