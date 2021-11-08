@@ -23,8 +23,8 @@ Detailed information is given below.
 ## Installing
 
 ```shell
-git clone https://gitlab.lrz.de/oguzziya/GroupX_CFDLab.git
-cd GroupX_CFDLab
+git clone https://gitlab.lrz.de/00000000014A3FA0/fluidchen-skeleton
+cd fluidchen-skeleton
 mkdir build && cd build
 cmake ..
 make
